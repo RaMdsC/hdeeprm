@@ -1,1 +1,2 @@
-name = 'hdeeprm'
+from .__meta__ import *
+

@@ -1,22 +1,23 @@
 #!/usr/bin/env python3.6
 
-import setuptools
+from setuptools import setup
 
-with open('README.md', 'r') as fh:
-    long_description = fh.read()
+def read(fname):
+    return open(os.path.join(os.path.dirname(__file__), fname)).read()
 
-setuptools.setup(
-    name='hdeeprm',
-    version='0.1.0',
-    author='Adrián Herrera',
-    author_email='adr.her.arc.95@gmail.com',
-    description=('Deep Reinforcement Learning for Workload Management in '
-                 'Heterogeneous Clusters'),
-    long_description=long_description,
-    long_description_content_type='text/markdown',
-    url='http://github.com/RaMdsC/hdeeprm',
+meta = {}
+exec(read('hdeeprm/__meta__.py'), meta)
+
+setup(
+    name=meta['name'],
+    version=meta['version'],
+    author=meta['author'],
+    author_email=meta['author_email'],
+    description=meta['description'],
+    long_description=read('README.rst'),
+    url=meta['url'],
     license='MIT',
-    packages=setuptools.find_packages(),
+    packages=[meta['name']]
     classifiers=[
         'Development Status :: 4 - Beta',
         'Intended Audience :: Science/Research',
