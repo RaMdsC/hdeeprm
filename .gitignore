@@ -7,3 +7,8 @@ dist/
 *.egg-info
 # Visual Studio Code settings
 .vscode/
+# Documentation
+docs/_build/
+docs/_static/
+docs/_template/
+
