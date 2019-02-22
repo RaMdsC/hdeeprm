@@ -1,0 +1,29 @@
+{
+  "_doc":{
+    "0":"latency: time delay between memory command entered and executed",
+    "1":"Latency = CAS latency x clock cycle duration",
+    "2":"CAS latency is the total number of clock cycles that data must go through",
+    "3":"Latency values obtained from http://www.crucial.com/usa/en/memory-performance-speed-latency",
+    "4":"Reference value of memory access latency is 100 ns",
+    "5":"Approximated by 90 + True latency",
+    "6":"Expressed in nanoseconds (ns)"
+  },
+  "DDR3-1333":{
+    "latency":"103.50ns"
+  },
+  "DDR3-1600":{
+    "latency":"103.75ns"
+  },
+  "DDR4-1866":{
+    "latency":"103.93ns"
+  },
+  "DDR4-2133":{
+    "latency":"104.06ns"
+  },
+  "DDR4-2400":{
+    "latency":"104.17ns"
+  },
+  "DDR4-2666":{
+    "latency":"103.50ns"
+  }
+}

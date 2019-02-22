@@ -1,0 +1,685 @@
+{
+  "_doc":{
+    "0":"id: unique identification of the node type in SimGrid platform",
+    "1":{
+      "1.0":"processors: set of processors inside the node",
+      "1.1":"type: type of the processor, check 'processor_types.json'",
+      "1.2":"number: total number of processors of the given type inside the node"
+    },
+    "2":{
+      "2.0":"memory-type: type of memory inside the node",
+      "2.1":"For now, only one type of memory is supported per node",
+      "2.2":"memory-capacity: total size of node's memory",
+      "2.3":"Expressed in Gigabytes (GB)"
+    }
+  },
+  "Basic":{
+    "id":"basic",
+    "processors":[
+      {
+        "type":"Basic",
+        "number":1
+      },
+      {
+        "type":"Basic+",
+        "number":1
+      }
+    ],
+    "memory":{
+      "type":"DDR3-1600",
+      "capacity":32
+    }
+  },
+  "Test0_N0":{
+    "id":"test0_n0",
+    "processors":[
+      {"type":"Test0_P0", "number":1}
+    ],
+    "memory":{"type":"DDR3-1600", "capacity":64}
+  },
+  "Test0_N1":{
+    "id":"test0_n1",
+    "processors":[
+      {"type":"Test0_P1", "number":1},
+      {"type":"Test0_P2", "number":1}
+    ],
+    "memory":{"type":"DDR3-1600", "capacity":64}
+  },
+  "Bullx B500-0":{
+    "id":"bullx_b500_0",
+    "processors":[
+      {
+        "type":"Xeon L5640",
+        "number":2
+      }
+    ],
+    "memory":{
+      "type":"DDR3-1600",
+      "capacity":48
+    }
+  },
+  "Bullx B500-1":{
+    "id":"bullx_b500_1",
+    "processors":[
+      {
+        "type":"Xeon X5670",
+        "number":2
+      }
+    ],
+    "memory":{
+      "type":"DDR3-1600",
+      "capacity":48
+    }
+  },
+  "Bullx B505-0":{
+    "id":"bullx_b505_0",
+    "processors":[
+      {
+        "type":"Xeon L5640",
+        "number":2
+      }
+    ],
+    "memory":{
+      "type":"DDR3-1600",
+      "capacity":96
+    }
+  },
+  "Bullx B505-1":{
+    "id":"bullx_b505_1",
+    "processors":[
+      {
+        "type":"Xeon L5640",
+        "number":2
+      }
+    ],
+    "memory":{
+      "type":"DDR3-1600",
+      "capacity":96
+    }
+  },
+  "Bullx S6030":{
+    "id":"bullx_s6030",
+    "processors":[
+      {
+        "type":"Xeon E7-4850",
+        "number":16
+      }
+    ],
+    "memory":{
+      "type":"DDR3-1600",
+      "capacity":1024
+    }
+  },
+  "Dell R720":{
+    "id":"dell_r720",
+    "processors":[
+      {
+        "type":"Xeon E5-2660",
+        "number":2
+      }
+    ],
+    "memory":{
+      "type":"DDR3-1600",
+      "capacity":64
+    }
+  },
+  "Dell R820":{
+    "id":"dell_r820",
+    "processors":[
+      {
+        "type":"Xeon E5-4640",
+        "number":4
+      }
+    ],
+    "memory":{
+      "type":"DDR3-1600",
+      "capacity":1024
+    }
+  },
+  "Delta D88x-M8-BI":{
+    "id":"delta_d88x_m8_bi",
+    "processors":[
+      {
+        "type":"Xeon E7-8880 v2",
+        "number":8
+      }
+    ],
+    "memory":{
+      "type":"DDR3-1600",
+      "capacity":3072
+    }
+  },
+  "SGI UV-2000":{
+    "id":"sgi_uv2000",
+    "processors":[
+      {
+        "type":"Xeon E5-4650 v2",
+        "number":16
+      }
+    ],
+    "memory":{
+      "type":"DDR3-1600",
+      "capacity":4096
+    }
+  },
+  "Ajax Node":{
+    "id":"ajax_node",
+    "processors":[
+      {
+        "type":"Xeon X5570",
+        "number":2
+      }
+    ],
+    "memory":{
+      "type":"DDR3-1600",
+      "capacity":72
+    }
+  },
+  "Alela Node":{
+    "id":"alela_node",
+    "processors":[
+      {
+        "type":"Xeon E5430",
+        "number":2
+      }
+    ],
+    "memory":{
+      "type":"DDR3-1600",
+      "capacity":32
+    }
+  },
+  "Doom Node":{
+    "id":"doom_node",
+    "processors":[
+      {
+        "type":"Xeon E5-2650 v2",
+        "number":2
+      }
+    ],
+    "memory":{
+      "type":"DDR3-1600",
+      "capacity":64
+    }
+  },
+  "Eru Node":{
+    "id":"eru_node",
+    "processors":[
+      {
+        "type":"Opteron 8384",
+        "number":8
+      }
+    ],
+    "memory":{
+      "type":"DDR3-1600",
+      "capacity":192
+    }
+  },
+  "Gram Node":{
+    "id":"gram_node",
+    "processors":[
+      {
+        "type":"Xeon E5-2670",
+        "number":2
+      }
+    ],
+    "memory":{
+      "type":"DDR3-1600",
+      "capacity":64
+    }
+  },
+  "Haldir Node":{
+    "id":"haldir_node",
+    "processors":[
+      {
+        "type":"Xeon E5-4620",
+        "number":8
+      }
+    ],
+    "memory":{
+      "type":"DDR3-1600",
+      "capacity":1024
+    }
+  },
+  "Hda Node":{
+    "id":"hda_node",
+    "processors":[
+      {
+        "type":"Xeon E5-2620",
+        "number":2
+      }
+    ],
+    "memory":{
+      "type":"DDR3-1600",
+      "capacity":96
+    }
+  },
+  "Hdb Node":{
+    "id":"hdb_node",
+    "processors":[
+      {
+        "type":"Xeon E5-2643",
+        "number":2
+      }
+    ],
+    "memory":{
+      "type":"DDR3-1600",
+      "capacity":128
+    }
+  },
+  "Hdc Node":{
+    "id":"hdc_node",
+    "processors":[
+      {
+        "type":"Xeon E5-2670",
+        "number":2
+      }
+    ],
+    "memory":{
+      "type":"DDR3-1600",
+      "capacity":128
+    }
+  },
+  "Hermes Node":{
+    "id":"hermes_node",
+    "processors":[
+      {
+        "type":"Xeon E5345",
+        "number":1
+      }
+    ],
+    "memory":{
+      "type":"DDR3-1600",
+      "capacity":16
+    }
+  },
+  "Hildor Node":{
+    "id":"hildor_node",
+    "processors":[
+      {
+        "type":"Xeon E5-2665",
+        "number":2
+      }
+    ],
+    "memory":{
+      "type":"DDR3-1600",
+      "capacity":64
+    }
+  },
+  "Kalpa Node":{
+    "id":"kalpa_node",
+    "processors":[
+      {
+        "type":"Xeon E5-4617",
+        "number":4
+      }
+    ],
+    "memory":{
+      "type":"DDR3-1600",
+      "capacity":256
+    }
+  },
+  "Konos Node":{
+    "id":"konos_node",
+    "processors":[
+      {
+        "type":"Xeon X5680",
+        "number":2
+      }
+    ],
+    "memory":{
+      "type":"DDR3-1600",
+      "capacity":24
+    }
+  },
+  "Losgar Node":{
+    "id":"losgar_node",
+    "processors":[
+      {
+        "type":"Opteron 6234",
+        "number":4
+      }
+    ],
+    "memory":{
+      "type":"DDR3-1600",
+      "capacity":64
+    }
+  },
+  "Loslab Node":{
+    "id":"loslab_node",
+    "processors":[
+      {
+        "type":"Xeon E5645",
+        "number":2
+      }
+    ],
+    "memory":{
+      "type":"DDR3-1600",
+      "capacity":12
+    }
+  },
+  "Luna Node":{
+    "id":"luna_node",
+    "processors":[
+      {
+        "type":"Xeon E5-2650",
+        "number":2
+      }
+    ],
+    "memory":{
+      "type":"DDR3-1600",
+      "capacity":96
+    }
+  },
+  "Mandos Node":{
+    "id":"mandos_node",
+    "processors":[
+      {
+        "type":"Opteron 6274",
+        "number":4
+      }
+    ],
+    "memory":{
+      "type":"DDR3-1600",
+      "capacity":256
+    }
+  },
+  "Manegrot Node":{
+    "id":"manegrot_node",
+    "processors":[
+      {
+        "type":"Xeon E5-4627 v2",
+        "number":4
+      }
+    ],
+    "memory":{
+      "type":"DDR3-1600",
+      "capacity":512
+    }
+  },
+  "Manwe Node A":{
+    "id":"manwe_node_a",
+    "processors":[
+      {
+        "type":"Opteron 885",
+        "number":8
+      }
+    ],
+    "memory":{
+      "type":"DDR3-1600",
+      "capacity":64
+    }
+  },
+  "Manwe Node B":{
+    "id":"manwe_node_b",
+    "processors":[
+      {
+        "type":"Opteron 885",
+        "number":8
+      }
+    ],
+    "memory":{
+      "type":"DDR3-1600",
+      "capacity":128
+    }
+  },
+  "Minos Node":{
+    "id":"minos_node",
+    "processors":[
+      {
+        "type":"Xeon E5645",
+        "number":2
+      }
+    ],
+    "memory":{
+      "type":"DDR3-1600",
+      "capacity":24
+    }
+  },
+  "Mudrc Node":{
+    "id":"mudrc_node",
+    "processors":[
+      {
+        "type":"Xeon E5-2403 v2",
+        "number":1
+      }
+    ],
+    "memory":{
+      "type":"DDR3-1600",
+      "capacity":3
+    }
+  },
+  "Nympha Node":{
+    "id":"nympha_node",
+    "processors":[
+      {
+        "type":"Xeon E5472",
+        "number":2
+      }
+    ],
+    "memory":{
+      "type":"DDR3-1600",
+      "capacity":16
+    }
+  },
+  "Perian Node A":{
+    "id":"perian_node_a",
+    "processors":[
+      {
+        "type":"Opteron 244",
+        "number":2
+      }
+    ],
+    "memory":{
+      "type":"DDR3-1600",
+      "capacity":2
+    }
+  },
+  "Perian Node B":{
+    "id":"perian_node_b",
+    "processors":[
+      {
+        "type":"Xeon X5365",
+        "number":2
+      }
+    ],
+    "memory":{
+      "type":"DDR3-1600",
+      "capacity":8
+    }
+  },
+  "Perian Node C":{
+    "id":"perian_node_c",
+    "processors":[
+      {
+        "type":"Xeon E5420",
+        "number":2
+      }
+    ],
+    "memory":{
+      "type":"DDR3-1600",
+      "capacity":8
+    }
+  },
+  "Quark Node A":{
+    "id":"quark_node_a",
+    "processors":[
+      {
+        "type":"Xeon 3.06",
+        "number":2
+      }
+    ],
+    "memory":{
+      "type":"DDR3-1600",
+      "capacity":2
+    }
+  },
+  "Quark Node B":{
+    "id":"quark_node_b",
+    "processors":[
+      {
+        "type":"Xeon 5160",
+        "number":2
+      }
+    ],
+    "memory":{
+      "type":"DDR3-1600",
+      "capacity":12
+    }
+  },
+  "Quark Node C":{
+    "id":"quark_node_c",
+    "processors":[
+      {
+        "type":"Xeon 5160",
+        "number":2
+      }
+    ],
+    "memory":{
+      "type":"DDR3-1600",
+      "capacity":8
+    }
+  },
+  "Quark Node D":{
+    "id":"quark_node_d",
+    "processors":[
+      {
+        "type":"Xeon X5570",
+        "number":2
+      }
+    ],
+    "memory":{
+      "type":"DDR3-1600",
+      "capacity":18
+    }
+  },
+  "Ramdal Node":{
+    "id":"ramdal_node",
+    "processors":[
+      {
+        "type":"Xeon E5-4650",
+        "number":4
+      }
+    ],
+    "memory":{
+      "type":"DDR3-1600",
+      "capacity":1024
+    }
+  },
+  "Skirit Node A":{
+    "id":"skirit_node_a",
+    "processors":[
+      {
+        "type":"Xeon 2.4",
+        "number":2
+      }
+    ],
+    "memory":{
+      "type":"DDR3-1600",
+      "capacity":1
+    }
+  },
+  "Skirit Node B":{
+    "id":"skirit_node_b",
+    "processors":[
+      {
+        "type":"Xeon 5160",
+        "number":2
+      }
+    ],
+    "memory":{
+      "type":"DDR3-1600",
+      "capacity":4
+    }
+  },
+  "Skirit Node C":{
+    "id":"skirit_node_c",
+    "processors":[
+      {
+        "type":"Xeon X5355",
+        "number":2
+      }
+    ],
+    "memory":{
+      "type":"DDR3-1600",
+      "capacity":8
+    }
+  },
+  "Tarkil Node":{
+    "id":"tarkil_node",
+    "processors":[
+      {
+        "type":"Xeon X5570",
+        "number":2
+      }
+    ],
+    "memory":{
+      "type":"DDR3-1600",
+      "capacity":24
+    }
+  },
+  "Ungu Node":{
+    "id":"ungu_node",
+    "processors":[
+      {
+        "type":"Xeon E5-4617",
+        "number":48
+      }
+    ],
+    "memory":{
+      "type":"DDR3-1600",
+      "capacity":6144
+    }
+  },
+  "Urga Node":{
+    "id":"urga_node",
+    "processors":[
+      {
+        "type":"Xeon E5-4627 v2",
+        "number":48
+      }
+    ],
+    "memory":{
+      "type":"DDR3-1600",
+      "capacity":6144
+    }
+  },
+  "Zebra Node":{
+    "id":"zebra_node",
+    "processors":[
+      {
+        "type":"Xeon E7-4860",
+        "number":4
+      }
+    ],
+    "memory":{
+      "type":"DDR3-1600",
+      "capacity":512
+    }
+  },
+  "Zewura Node":{
+    "id":"zewura_node",
+    "processors":[
+      {
+        "type":"Xeon E7-2860",
+        "number":8
+      }
+    ],
+    "memory":{
+      "type":"DDR3-1600",
+      "capacity":512
+    }
+  },
+  "Zorg Node":{
+    "id":"zorg_node",
+    "processors":[
+      {
+        "type":"Xeon E7-8891 v2",
+        "number":4
+      }
+    ],
+    "memory":{
+      "type":"DDR3-1600",
+      "capacity":512
+    }
+  }
+}

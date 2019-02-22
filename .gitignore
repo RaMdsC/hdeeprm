@@ -1,0 +1,9 @@
+# Compiled Python
+__pycache__/
+*.pyc
+# Setuptools outputs
+build/
+dist/
+*.egg-info
+# Visual Studio Code settings
+.vscode/

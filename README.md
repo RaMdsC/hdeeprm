@@ -1,2 +1,4 @@
-# hdeeprm
-HDeepRM: Deep Reinforcement Learning for Workload Management in Heterogeneous Clusters
+# HDeepRM
+
+Framework for evaluating Deep Reinforcement Learning algorithms on
+Heterogeneous Clusters.

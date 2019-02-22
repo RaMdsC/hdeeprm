@@ -1,0 +1,16 @@
+{
+  "_doc":{
+    "0":"bandwidth: maximum rate of data transfer across the network path",
+    "1":"This applies to each individual link in the data centre, not to the full topology",
+    "2":"Expressed in Gigabits per second (Gbps)"
+  },
+  "InfiniBand FDR x4":{
+    "bandwidth":"54.54Gbps"
+  },
+  "InfiniBand QDR":{
+    "bandwidth":"40.0Gbps"
+  },
+  "Gigabit Ethernet 1000BASE-T":{
+    "bandwidth":"1.0Gbps"
+  }
+}
