@@ -40,13 +40,7 @@ release = '0.1.0'
 extensions = [
     'sphinx.ext.autodoc',
     'sphinx.ext.viewcode',
-    'sphinxcontrib.apidoc'
 ]
-
-apidoc_module_dir = '../hdeeprm'
-apidoc_output_dir = 'reference'
-apidoc_excluded_paths = ['tests']
-apidoc_separate_modules = True
 
 # Add any paths that contain templates here, relative to this directory.
 templates_path = ['_templates']
@@ -179,5 +173,25 @@ epub_title = project
 # A list of files that should not be packed into the epub file.
 epub_exclude_files = ['search.html']
 
+def run_apidoc(_):
+    ignore_paths = [
+        ...
+    ]
+
+    argv = [
+        "-f",
+        "-T",
+        "-e",
+        "-M",
+        "-o",
+        ".",
+        "../hdeeprm"
+    ] + ignore_paths
+
+    from sphinx.ext import apidoc
+    apidoc.main(argv)
+
+def setup(app):
+    app.connect('builder-inited', run_apidoc)
 
 # -- Extension configuration -------------------------------------------------
