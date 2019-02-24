@@ -152,6 +152,11 @@ epub_title = project
 # A list of files that should not be packed into the epub file.
 epub_exclude_files = ['search.html']
 
+# -- Options for autodoc extension -------------------------------------------
+
+# Mock modules for generating the doc without build issues
+autodoc_mock_imports = ['lxml', 'numpy', 'torch']
+
 # -- Options for intersphinx extension ---------------------------------------
 
 intersphinx_mapping = {
