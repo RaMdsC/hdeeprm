@@ -5,7 +5,6 @@ Configuration for Sphinx documentation generation.
 import datetime
 import os.path as path
 import sys
-import hdeeprm.__meta__ as meta
 
 # -- Path setup --------------------------------------------------------------
 
@@ -13,6 +12,8 @@ sys.path.insert(0, path.abspath('.'))
 sys.path.insert(0, path.abspath('../'))
 
 # -- Project information -----------------------------------------------------
+
+import hdeeprm.__meta__ as meta
 
 project = meta.NAME.upper()
 author = meta.AUTHOR
