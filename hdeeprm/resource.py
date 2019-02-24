@@ -1,150 +1,137 @@
 """
-Defines all the resources in the heterogeneous platform.
-Platform: root resource, contains rest of resources.
-Cluster: contains a set of Nodes.
-Node: provides shared memory and a set of Processors.
-Processor: provides bandwidth for accessing memory and a set of Cores.
-Core: basic computing resource.
+Resource class and functionality for defining the Resource Hierarchy in the Decision System.
 """
 
-import logging
+from pybatsim.batsim.batsim import Job
 
-class Platform:
+class Resource:
     """
-    Platform resource. Heterogeneous data centre.
-    """
+Resource representing a Core in the Platform. Uniquely identifiable in Batsim. Associated to a
+computing capability and a power consumption.
 
-    def __init__(self, job_limits):
-        # Resource totals
-        self.total_nodes = 0
-        self.total_processors = 0
-        self.total_cores = 0
-        # Job limits
-        self.max_time_per_job = job_limits['max_time']
-        self.max_core_per_job = job_limits['max_core']
-        self.max_mem_per_job = job_limits['max_mem']
-        self.max_mem_bw_per_job = job_limits['max_mem_bw']
-        # Reference speed
-        # Based on 2.75 GHz 8-wide vector machine
-        ref_machine = job_limits['reference_machine']
-        self.reference_speed = ref_machine['clock_rate'] * ref_machine['dpflop_vector_width']
-        # Store a reference to the Clusters
-        self.local_clusters = []
-
-class Cluster:
-    """
-    Cluster resource. Zone with a set of nodes within the DC.
-    """
-
-    def __init__(self, platform):
-        self.platform = platform
-        # Store a reference to local Nodes
-        self.local_nodes = []
-
-class Node:
-    """
-    Node resource. Server with a set of processors and memory capacity.
-    """
-
-    def __init__(self, cluster, mem):
-        self.cluster = cluster
-        self.max_mem = mem
-        self.current_mem = mem
-        # Store a reference to local Processors
-        self.local_processors = []
-
-class Processor:
-    """
-    Processor resource. CPU, GPU or other with a set of computing cores and
-    memory access bandwidth.
+Attributes:
+    processor (dict): parent Processor data structure.
+        node (dict): parent Node data structure.
+            cluster (dict): parent Cluster data structure.
+                platform (dict): root Platform data structure.
+                    total_nodes (int): total Nodes in the Platform.
+                    total_processors (int): total Processors in the Platform.
+                    total_cores (int): total Cores in the Platform.
+                    job_limits (dict): resource request limits for a Job in the Platform.
+                        max_time (int): maximum requested time.
+                        max_core (int): maximum requested Cores.
+                        max_mem (int): maximum requested memory.
+                        max_mem_bw (int): maximum requested memory bandwidth.
+                        reference_machine (dict): reference host for measures.
+                            clock_rate (float): machine clock speed.
+                            dpflop_vector_width (int): width of vector operations
+                                (in 32-byte blocks).
+                    reference_speed (float): speed to tranform time into operations.
+                    clusters (list): reference to Clusters inside the Platform.
+                local_nodes (list): reference to local Nodes to the Cluster.
+            max_mem (int): maximum memory capacity of the Node.
+            current_mem (int): current memory capacity of the Node.
+            local_processors (list): reference to local Processors to the Node.
+        max_mem_bw (float): maximum memory BW capacity of the Processor.
+        current_mem_bw (float): current memory BW capacity of the Processor.
+        flops_per_core (float): maximum FLOPs per Core in the Processor.
+        power_per_core (float): maximum Watts per Core in the Processor.
+        local_cores (list): reference to local Cores to the Processor.
+    bs_id (int): unique identification. Also used in Batsim.
+    state (dict): defines the current state of the Resource.
+        pstate (int): P-state for the Core.
+        current_flops (float): current computing capability in FLOPs.
+        current_power (float): current power consumption in Watts.
+        served_job (Job): Job being served by the Resource.
     """
 
-    def __init__(self, node, mem_bw, flops_per_core, power_per_core):
-        self.node = node
-        self.max_mem_bw = mem_bw
-        self.current_mem_bw = mem_bw
-        self.flops_per_core = flops_per_core
-        self.power_per_core = power_per_core
-        # Store a reference to local Cores
-        self.local_cores = []
-
-class Core:
-    """
-    Core resource. Uniquely identifiable in Batsim.
-    Associated to a computing capability and a power consumption.
-    """
-
-    def __init__(self, processor, bs_id):
+    def __init__(self, processor: dict, bs_id: int) -> None:
         self.processor = processor
         self.bs_id = bs_id
         # By default, core is idle
-        self.pstate = 3
-        self.current_flops = 0.0
-        self.current_power = 0.05 * self.processor.power_per_core
-        # Served job, when core inactive this is None
-        self.served_job = None
-        # State tracking variables
-        self.last_update = None
-        self.remaining_ops = None
+        self.state = {
+            'pstate': 3,
+            'current_flops': 0.0,
+            'current_power': 0.05 * self.processor['power_per_core'],
+            # When active, the Resource is serving a Job which is stored as part of its state
+            # Remaining operations and updates along simulation are tracked
+            'served_job': None
+        }
 
-    def set_state(self, new_pstate, now, new_served_job=None):
+    def set_state(self, new_pstate: int, now: float, new_served_job: Job = None) -> None:
         """
-        Sets the P-state of the core.
-        P-state dictates the availability, computing speed and power
-        consumption.
+Sets the state of the Resource. It dictates the availability, computing speed and power consumption.
+
+Args:
+    new_pstate: new P-state for the Resource.
+    now: current simulation time in seconds.
+    new_served_job: reference to the Job now being served by the Resource.
+
+Returns:
+    None
         """
 
-        logging.debug('Core %s, state %s', self.bs_id, new_pstate)
         # Active core
-        if new_pstate == 0 or new_pstate == 1:
-            if not self.served_job:
-                self.last_update = now
-                self.served_job = new_served_job
-                self.remaining_ops = new_served_job.req_ops
-                self.processor.current_mem_bw -= self.served_job.mem_bw
-                logging.debug('From set_state - Processor: %s', self.processor)
-                logging.debug('From set_state - Processor id list: %s', [core.bs_id for core in self.processor.local_cores])
-                logging.debug('From set_state - Proc current memBW: %s', self.processor.current_mem_bw)
-                self.processor.node.current_mem -= self.served_job.mem
+        if new_pstate in (0, 1):
+            if not self.state['served_job']:
+                new_served_job.last_update = now
+                new_served_job.remaining_ops = new_served_job.req_ops
+                self.state['served_job'] = new_served_job
+                self.processor['current_mem_bw'] -= new_served_job.mem_bw
+                self.processor['node']['current_mem'] -= new_served_job.mem
             else:
                 # Update the completion state
                 self.update_completion(now)
             # 100% Power
-            self.current_power = self.processor.power_per_core
-        if new_pstate == 0:
-            # 100% FLOPS
-            self.current_flops = self.processor.flops_per_core
-        if new_pstate == 1:
-            # 75% FLOPS
-            self.current_flops = 0.75 * self.processor.flops_per_core
+            self.state['current_power'] = self.processor['power_per_core']
+            if new_pstate == 0:
+                # 100% FLOPS
+                self.state['current_flops'] = self.processor['flops_per_core']
+            else:
+                # 75% FLOPS
+                self.state['current_flops'] = 0.75 * self.processor['flops_per_core']
         # Inactive core
-        if new_pstate == 2 or new_pstate == 3:
+        elif new_pstate in (2, 3):
+            if self.state['served_job']:
+                self.processor['current_mem_bw'] += self.state['served_job'].mem_bw
+                self.processor['node']['current_mem'] += self.state['served_job'].mem
+                self.state['served_job'] = None
             # 0% FLOPS
-            self.current_flops = 0.0
-            if self.served_job:
-                self.processor.current_mem_bw += self.served_job.mem_bw
-                self.processor.node.current_mem += self.served_job.mem
-                self.served_job = None
-        if new_pstate == 2:
-            # 15% Power
-            self.current_power = 0.15 * self.processor.power_per_core
-        if new_pstate == 3:
-            # 5% Power
-            self.current_power = 0.05 * self.processor.power_per_core
-        if new_pstate not in range(4):
-            raise ValueError('Error: unknown p-state')
-        self.pstate = new_pstate
+            self.state['current_flops'] = 0.0
+            if new_pstate == 2:
+                # 15% Power
+                self.state['current_power'] = 0.15 * self.processor['power_per_core']
+            else:
+                # 5% Power
+                self.state['current_power'] = 0.05 * self.processor['power_per_core']
+        else:
+            raise ValueError('Error: unknown P-state')
+        self.state['pstate'] = new_pstate
 
-    def update_completion(self, now):
+    def update_completion(self, now: float) -> None:
         """
-        Updates the job operations left.
-        """
-        time_delta = now - self.last_update
-        self.remaining_ops -= self.current_flops * time_delta
-        self.last_update = now
+Updates the Job operations left.
 
-    def get_remaining_per(self):
+Args:
+    now: current simulation time in seconds.
+
+Returns:
+    None
         """
-        Provides the remaining percentage of the job being served.
+
+        time_delta = now - self.state['served_job'].last_update
+        self.state['served_job'].remaining_ops -= self.state['current_flops'] * time_delta
+        self.state['served_job'].last_update = now
+
+    def get_remaining_per(self) -> None:
         """
-        return self.remaining_ops / self.served_job.req_ops
+Provides the remaining percentage of the Job being served.
+
+Args:
+    None
+
+Returns:
+    None
+        """
+
+        return self.state['served_job'].remaining_ops / self.state['served_job'].req_ops

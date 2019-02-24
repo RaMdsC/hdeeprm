@@ -1,46 +1,57 @@
-#!/usr/bin/env python3.6
+"""
+Setup for building HDeepRM package.
+"""
 
-from setuptools import setup
+import os.path as path
+import setuptools
+import hdeeprm.__meta__ as meta
 
-def read(fname):
-    return open(os.path.join(os.path.dirname(__file__), fname)).read()
+def main() -> None:
+    """
+Entry point for the setup.
 
-meta = {}
-exec(read('hdeeprm/__meta__.py'), meta)
+Args:
+    None.
 
-setup(
-    name=meta['name'],
-    version=meta['version'],
-    author=meta['author'],
-    author_email=meta['author_email'],
-    description=meta['description'],
-    long_description=read('README.rst'),
-    url=meta['url'],
-    license='MIT',
-    packages=[meta['name']]
-    classifiers=[
-        'Development Status :: 4 - Beta',
-        'Intended Audience :: Science/Research',
-        'License :: OSI Approved :: MIT License',
-        'Natural Language :: English',
-        'Programming Language :: Python :: 3.6',
-        'Topic :: Scientific/Engineering :: Artificial Intelligence'
-    ],
-    keywords=('deep reinforcement learning workload management job '
-              'scheduling resource simulator framework heterogeneous '
-              'cluster batsim'),
-    install_requires=[
-        'defusedxml',
-        'gym',
-        'lxml',
-        'numpy',
-        'procset',
-        'pybatsim',
-        'torch'
-    ],
-    entry_points={
-        'console_scripts': [
-            'hdeeprm-launch = hdeeprm.cmd:launch'
-        ]
-    },
-    include_package_data=True)
+Returns:
+    None.
+    """
+
+    readme = open(path.join(path.dirname(__file__), 'README.rst')).read()
+    setuptools.setup(
+        name=meta.NAME,
+        version=meta.VERSION,
+        author=meta.AUTHOR,
+        author_email=meta.AUTHOR_EMAIL,
+        description=meta.DESCRIPTION,
+        long_description=readme,
+        url=meta.URL,
+        license='MIT',
+        packages=[meta.NAME],
+        classifiers=[
+            'Development Status :: 4 - Beta',
+            'Intended Audience :: Science/Research',
+            'License :: OSI Approved :: MIT License',
+            'Natural Language :: English',
+            'Programming Language :: Python :: 3.6',
+            'Topic :: Scientific/Engineering :: Artificial Intelligence'
+        ],
+        keywords=meta.KEYWORDS,
+        install_requires=[
+            'defusedxml',
+            'gym',
+            'lxml',
+            'numpy',
+            'procset',
+            'pybatsim',
+            'torch'
+        ],
+        entry_points={
+            'console_scripts': [
+                'hdeeprm-launch = hdeeprm.cmd:launch'
+            ]
+        },
+        include_package_data=True)
+
+if __name__ == '__main__':
+    main()

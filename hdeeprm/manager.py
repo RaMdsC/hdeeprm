@@ -1,6 +1,5 @@
 """
-Defines HDeepRM managers, which are in charge of mapping
-jobs into resources.
+Defines HDeepRM managers, which are in charge of mapping Jobs into Resources.
 """
 
 import logging
