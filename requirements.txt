@@ -1,0 +1,7 @@
+defusedxml>=0.5.0
+gym>=0.11.0
+lxml>=4.3.1
+numpy>=1.16.1
+procset>=1.0
+pybatsim>=3.1.0
+torch>=1.0.1

@@ -18,6 +18,7 @@ Returns:
     """
 
     readme = open(path.join(path.dirname(__file__), 'README.rst')).read()
+    requirements = open(path.join(path.dirname(__file__), 'requirements.txt')).read()
     setuptools.setup(
         name=meta.NAME,
         version=meta.VERSION,
@@ -37,15 +38,7 @@ Returns:
             'Topic :: Scientific/Engineering :: Artificial Intelligence'
         ],
         keywords=meta.KEYWORDS,
-        install_requires=[
-            'defusedxml',
-            'gym',
-            'lxml',
-            'numpy',
-            'procset',
-            'pybatsim',
-            'torch'
-        ],
+        install_requires=requirements,
         entry_points={
             'console_scripts': [
                 'hdeeprm-launch = hdeeprm.cmd:launch'
