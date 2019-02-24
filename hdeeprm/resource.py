@@ -2,7 +2,7 @@
 Resource class and functionality for defining the Resource Hierarchy in the Decision System.
 """
 
-from pybatsim.batsim.batsim import Job
+from batsim.batsim import Job
 
 class Resource:
     """

@@ -5,7 +5,7 @@ Defines the superclass for all Workload Managers.
 import logging
 import random
 import numpy as np
-from pybatsim.batsim.batsim import BatsimScheduler
+from batsim.batsim import BatsimScheduler
 from hdeeprm.manager import JobScheduler, ResourceManager
 
 class BaseWorkloadManager(BatsimScheduler):

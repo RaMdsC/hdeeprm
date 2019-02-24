@@ -6,20 +6,27 @@ import logging
 import pickle as pkl
 import random
 from procset import ProcSet
+from batsim.batsim import Job
 
 class JobScheduler:
     """
-    Base Job Scheduler.
+Selects Jobs from the Job Queue to be processed in the Platform.
+
+Attributes:
+    pending_jobs (list): the Job Queue.
+    nb_active_jobs (int): number of Jobs being served by the Platform.
+    nb_completed_jobs (int): number of Jobs already served by the Platform.
+    peeked_job (Job): cached next Job to be processed.
     """
 
-    def __init__(self):
+    def __init__(self) -> None:
         self.pending_jobs = []
         self.nb_active_jobs = 0
         self.nb_completed_jobs = 0
         self.peeked_job = None
         self.sorting_key = None
 
-    def peek_job(self):
+    def peek_job(self) -> Job:
         """
         Returns a reference to the first selected job
         without removing it from the queue.
