@@ -155,7 +155,7 @@ epub_exclude_files = ['search.html']
 # -- Options for autodoc extension -------------------------------------------
 
 # Mock modules for generating the doc without build issues
-autodoc_mock_imports = ['lxml', 'numpy', 'torch']
+autodoc_mock_imports = ['defusedxml', 'lxml', 'numpy', 'torch']
 
 # -- Options for intersphinx extension ---------------------------------------
 
