@@ -12,16 +12,18 @@ import hdeeprm.resource as res
 from hdeeprm.__xml__ import exml, XMLElement
 
 def generate_workload(workload_file_path: str, nb_resources: int, nb_jobs: int) -> None:
-    """
-Parses a SWF formatted Workload file into a Batsim-ready JSON file.
+    """Converts a SWF Workload into Batsim format.
+
+Parses a SWF formatted Workload file into a Batsim-ready JSON file. Generates as many jobs as
+specified in "nb_jobs".
 
 Args:
-    workload_file_path: location of the SWF Workload file in the system.
-    nb_resources: total number of resources (Cores) in the Platform.
-    nb_jobs: total number of jobs for the generated Workload.
-
-Returns:
-    None.
+    workload_file_path (str):
+        Location of the SWF Workload file in the system.
+    nb_resources (int):
+        Total number of resources (Cores) in the Platform.
+    nb_jobs (int):
+        Total number of jobs for the generated Workload.
     """
 
     with open(workload_file_path, 'r') as in_f:
@@ -314,7 +316,7 @@ def _core_xml(shared_state: dict, flops_per_core_xml: dict, power_per_core_xml: 
                                           f'udl_{shared_state["counters"]["node"]}'))
 
 def _core_el(shared_state: dict, proc_el: dict) -> None:
-    core_el = res.Core(proc_el, shared_state['counters']['core'])
+    core_el = res.Resource(proc_el, shared_state['counters']['core'])
     proc_el.node.cluster.platform.total_cores += 1
     proc_el.local_cores.append(core_el)
     shared_state['core_pool'].append(core_el)
