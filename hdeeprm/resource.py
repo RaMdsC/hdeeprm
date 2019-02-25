@@ -34,19 +34,19 @@ Attributes:
                 | dpflop_vector_width (:class:`int`) - Width of vector operations in 32B blocks.
 
             | reference_speed (:class:`float`) - Speed for tranforming time into operations.
-            | clusters (:class:`list`(:class:`dict`)) - Reference to all Clusters in the Platform.
+            | clusters (list(:class:`dict`)) - Reference to all Clusters in the Platform.
 
-          | local_nodes (:class:`list`(:class:`dict`)) - Reference to local Nodes to the Cluster.
+          | local_nodes (list(:class:`dict`)) - Reference to local Nodes to the Cluster.
 
         | max_mem (:class:`int`) - Maximum memory capacity of the Node in MB.
         | current_mem (:class:`int`) - Current memory capacity of the Node in MB.
-        | local_processors (:class:`list`(:class:`dict`)) - Reference to local Procs to the Node.
+        | local_processors (list(:class:`dict`)) - Reference to local Procs to the Node.
 
       | max_mem_bw (:class:`float`) - Maximum memory BW capacity of the Processor in GB/s.
       | current_mem_bw (:class:`float`) - Current memory BW capacity of the Processor in GB/s.
       | flops_per_core (:class:`float`) - Maximum FLOPs per Core in the Processor.
       | power_per_core (:class:`float`) - Maximum Watts per Core in the Processor.
-      | local_cores (:class:`list`(:class:`.Resource`)) - Reference to local Cores to the Processor.
+      | local_cores (list(:class:`.Resource`)) - Reference to local Cores to the Processor.
 
     bs_id (int): Unique identification. Also used in Batsim.
     state (dict): Defines the current state of the Resource. Data fields:
@@ -71,16 +71,18 @@ Attributes:
         }
 
     def set_state(self, new_pstate: int, now: float, new_served_job: Job = None) -> None:
-        """
-Sets the state of the Resource. It dictates the availability, computing speed and power consumption.
+        """Sets the state of the Resource.
+
+It modifies the availability, computing speed and power consumption. It also establishes a new
+served Job in case the Resource is now active.
 
 Args:
-    new_pstate: new P-state for the Resource.
-    now: current simulation time in seconds.
-    new_served_job: reference to the Job now being served by the Resource.
-
-Returns:
-    None
+    new_pstate (int):
+        New P-state for the Resource.
+    now (float):
+        Current simulation time in seconds.
+    new_served_job (Job):
+        Reference to the Job now being served by the Resource. Defaults to None.
         """
 
         # Active core
@@ -121,14 +123,13 @@ Returns:
         self.state['pstate'] = new_pstate
 
     def update_completion(self, now: float) -> None:
-        """
-Updates the Job operations left.
+        """Updates the Job operations left.
+
+Calculates the amount of operations that have been processed using the time span from last update.
 
 Args:
-    now: current simulation time in seconds.
-
-Returns:
-    None
+    now (float):
+        Current simulation time in seconds.
         """
 
         time_delta = now - self.state['served_job'].last_update
@@ -136,14 +137,9 @@ Returns:
         self.state['served_job'].last_update = now
 
     def get_remaining_per(self) -> None:
-        """
-Provides the remaining percentage of the Job being served.
+        """Provides the remaining percentage of the Job being served.
 
-Args:
-    None
-
-Returns:
-    None
+Calculated by dividing the remaining operations by the total requested on arrival.
         """
 
         return self.state['served_job'].remaining_ops / self.state['served_job'].req_ops

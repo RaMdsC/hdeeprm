@@ -15,7 +15,7 @@ sys.path.insert(0, path.abspath('../'))
 
 import hdeeprm.__meta__ as meta
 
-project = meta.NAME.upper()
+project = meta.NAME.lower()
 author = meta.AUTHOR
 copyright = f'{datetime.datetime.now().year}, {author}'
 release = meta.VERSION
@@ -50,8 +50,8 @@ def run_apidoc(_):
 def retitle_modules(_):
     pth = 'source/packages/modules.rst'
     lines = open(pth).read().splitlines()
-    lines[0] = 'API'
-    lines[1] = '==='
+    lines[0] = 'HDeepRM API'
+    lines[1] = '==========='
     open(pth, 'w').write('\n'.join(lines))
 
 def setup(app):
@@ -160,6 +160,6 @@ autodoc_mock_imports = ['torch']
 # -- Options for intersphinx extension ---------------------------------------
 
 intersphinx_mapping = {
-    'Python': ('https://docs.python.org/', None),
-    'NumPy': ('https://docs.scipy.org/doc/numpy/', None),
+    'python': ('https://docs.python.org/', None),
+    'procset': ('https://procset.readthedocs.io/en/stable/', None)
 }

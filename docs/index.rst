@@ -5,7 +5,7 @@ Welcome to HDeepRM's documentation!
    :maxdepth: 2
    :caption: Contents:
 
-   source/readme
+   source/overview
    source/packages/modules
    source/contributing
    source/changelog
