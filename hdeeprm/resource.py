@@ -11,45 +11,50 @@ Resources process Jobs inside the Platform. They are uniquely identifiable in Ba
 computing capability for a given power consumption.
 
 Attributes:
-    processor (dict): Parent Processor data structure. Data fields:
+    processor (dict): Parent Processor data structure. Fields:
 
-        node (:class:`dict`): Parent Node data structure. Data fields:
-            cluster (:class:`dict`): Parent Cluster data structure. Data fields:
-                platform (:class:`dict`): Root Platform data structure. Data fields:
-                    total_nodes (:class:`int`): Total Nodes in the Platform.
+      | node (:class:`dict`) - Parent Node data structure. Fields:
 
-                    total_processors (int): Total Processors in the Platform.
-                    total_cores (int): Total Cores in the Platform.
-                    job_limits (dict): Resource request limits for any Job. Data fields:
-                        max_time (int): Maximum requested time in seconds.
-                        max_core (int): Maximum requested Cores.
-                        max_mem (int): Maximum requested Memory in MB.
-                        max_mem_bw (int): Maximum requested Memory BW in GB/s.
-                        reference_machine (dict): Reference host for measures. Data fields:
-                            clock_rate (float): Machine clock speed.
-                            dpflop_vector_width (int): Width of vector operations in 32B blocks.
+        | cluster (:class:`dict`) - Parent Cluster data structure. Fields:
 
-                    reference_speed (float): Speed for tranforming time into operations.
-                    clusters (list(dict)): Reference to all Clusters inside the Platform.
+          | platform (:class:`dict`) - Root Platform data structure. Fields:
 
-                local_nodes (list(dict)): Reference to local Nodes to the Cluster.
+            | total_nodes (:class:`int`) - Total Nodes in the Platform.
+            | total_processors (:class:`int`) - Total Processors in the Platform.
+            | total_cores (:class:`int`) - Total Cores in the Platform.
+            | job_limits (:class:`dict`) - Resource request limits for any Job. Fields:
 
-            max_mem (int): Maximum memory capacity of the Node in MB.
-            current_mem (int): Current memory capacity of the Node in MB.
-            local_processors (list(dict)): Reference to local Processors to the Node.
+              | max_time (:class:`int`) - Maximum requested time in seconds.
+              | max_core (:class:`int`) - Maximum requested Cores.
+              | max_mem (:class:`int`) - Maximum requested Memory in MB.
+              | max_mem_bw (:class:`int`) - Maximum requested Memory BW in GB/s.
+              | reference_machine (:class:`dict`) - Reference host for measures. Fields:
 
-        max_mem_bw (float): Maximum memory BW capacity of the Processor in GB/s.
-        current_mem_bw (float): Current memory BW capacity of the Processor in GB/s.
-        flops_per_core (float): Maximum FLOPs per Core in the Processor.
-        power_per_core (float): Maximum Watts per Core in the Processor.
-        local_cores (list(:class:`.Resource`)): Reference to local Cores to the Processor.
+                | clock_rate (:class:`float`) - Machine clock speed.
+                | dpflop_vector_width (:class:`int`) - Width of vector operations in 32B blocks.
+
+            | reference_speed (:class:`float`) - Speed for tranforming time into operations.
+            | clusters (:class:`list`(:class:`dict`)) - Reference to all Clusters in the Platform.
+
+          | local_nodes (:class:`list`(:class:`dict`)) - Reference to local Nodes to the Cluster.
+
+        | max_mem (:class:`int`) - Maximum memory capacity of the Node in MB.
+        | current_mem (:class:`int`) - Current memory capacity of the Node in MB.
+        | local_processors (:class:`list`(:class:`dict`)) - Reference to local Procs to the Node.
+
+      | max_mem_bw (:class:`float`) - Maximum memory BW capacity of the Processor in GB/s.
+      | current_mem_bw (:class:`float`) - Current memory BW capacity of the Processor in GB/s.
+      | flops_per_core (:class:`float`) - Maximum FLOPs per Core in the Processor.
+      | power_per_core (:class:`float`) - Maximum Watts per Core in the Processor.
+      | local_cores (:class:`list`(:class:`.Resource`)) - Reference to local Cores to the Processor.
 
     bs_id (int): Unique identification. Also used in Batsim.
     state (dict): Defines the current state of the Resource. Data fields:
-        pstate (int): P-state for the Core.
-        current_flops (float): current computing capability in FLOPs.
-        current_power (float): current power consumption in Watts.
-        served_job (Job): Job being served by the Resource.
+
+      | pstate (:class:`int`) - P-state for the Core.
+      | current_flops (:class:`float`) - Current computing capability in FLOPs.
+      | current_power (:class:`float`) - Current power consumption in Watts.
+      | served_job (Job) - Job being served by the Resource.
     """
 
     def __init__(self, processor: dict, bs_id: int) -> None:
