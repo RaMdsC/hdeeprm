@@ -12,17 +12,17 @@ import hdeeprm.resource as res
 from hdeeprm.__xml__ import exml, XMLElement
 
 def generate_workload(workload_file_path: str, nb_resources: int, nb_jobs: int) -> None:
-    """Converts a SWF Workload into Batsim format.
+    """SWF-formatted Workload -> Batsim-ready JSON format.
 
 Parses a SWF formatted Workload file into a Batsim-ready JSON file. Generates as many jobs as
 specified in "nb_jobs".
 
 Args:
-    workload_file_path (str):
+    workload_file_path (``str``):
         Location of the SWF Workload file in the system.
-    nb_resources (int):
+    nb_resources (``int``):
         Total number of resources (Cores) in the Platform.
-    nb_jobs (int):
+    nb_jobs (``int``):
         Total number of jobs for the generated Workload.
     """
 
@@ -102,17 +102,19 @@ Args:
 
 def generate_platform(platform_file_path: str, gen_platform_xml: bool = True,
                       gen_res_hierarchy: bool = False) -> None:
-    """
+    """HDeepRM JSON Platform -> Batsim-ready XML format + Resource Hierarchy.
+
 Parses a HDeepRM JSON formatted platform definition and outputs both a Batsim-ready XML file
-and the Resource Hierarchy pickled for the Decision System to understand relations.
+and the Resource Hierarchy pickled for the Decision System to understand relations between Cores,
+Processors and Nodes.
 
 Args:
-    platform_file_path: location of the HDeepRM Platform file in the system.
-    gen_platform_xml: generate the Platform XML. Defaults to True.
-    gen_res_hierarchy: generate the Resource Hierarchy. Defaults to False.
-
-Returns:
-    None.
+    platform_file_path (``str``):
+        Location of the HDeepRM Platform file in the system.
+    gen_platform_xml (``bool``):
+        If ``True``, generate the Platform XML. Defaults to ``True``.
+    gen_res_hierarchy (``bool``):
+        If ``True``, generate the Resource Hierarchy. Defaults to ``False``.
     """
 
     # Define shared state

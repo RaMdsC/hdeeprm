@@ -7,14 +7,8 @@ import setuptools
 import hdeeprm.__meta__ as meta
 
 def main() -> None:
-    """
-Entry point for the setup.
-
-Args:
-    None.
-
-Returns:
-    None.
+    """Entry point for the setup.
+Executes the setup and installs the HDeepRM package.
     """
 
     readme = open(path.join(path.dirname(__file__), 'README.rst')).read()

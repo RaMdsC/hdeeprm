@@ -5,44 +5,78 @@ Resource class and functionality for defining the Resource Hierarchy in the Deci
 from batsim.batsim import Job
 
 class Resource:
-    """
-Resource representing a Core in the Platform. Uniquely identifiable in Batsim. Associated to a
-computing capability and a power consumption.
+    """Resource representing a Core in the Platform.
+
+Resources process Jobs inside the Platform. They are uniquely identifiable in Batsim and provide a
+computing capability for a given power consumption.
 
 Attributes:
-    processor (dict): parent Processor data structure.
-        node (dict): parent Node data structure.
-            cluster (dict): parent Cluster data structure.
-                platform (dict): root Platform data structure.
-                    total_nodes (int): total Nodes in the Platform.
-                    total_processors (int): total Processors in the Platform.
-                    total_cores (int): total Cores in the Platform.
-                    job_limits (dict): resource request limits for a Job in the Platform.
-                        max_time (int): maximum requested time.
-                        max_core (int): maximum requested Cores.
-                        max_mem (int): maximum requested memory.
-                        max_mem_bw (int): maximum requested memory bandwidth.
-                        reference_machine (dict): reference host for measures.
-                            clock_rate (float): machine clock speed.
-                            dpflop_vector_width (int): width of vector operations
-                                (in 32-byte blocks).
-                    reference_speed (float): speed to tranform time into operations.
-                    clusters (list): reference to Clusters inside the Platform.
-                local_nodes (list): reference to local Nodes to the Cluster.
-            max_mem (int): maximum memory capacity of the Node.
-            current_mem (int): current memory capacity of the Node.
-            local_processors (list): reference to local Processors to the Node.
-        max_mem_bw (float): maximum memory BW capacity of the Processor.
-        current_mem_bw (float): current memory BW capacity of the Processor.
-        flops_per_core (float): maximum FLOPs per Core in the Processor.
-        power_per_core (float): maximum Watts per Core in the Processor.
-        local_cores (list): reference to local Cores to the Processor.
-    bs_id (int): unique identification. Also used in Batsim.
-    state (dict): defines the current state of the Resource.
-        pstate (int): P-state for the Core.
-        current_flops (float): current computing capability in FLOPs.
-        current_power (float): current power consumption in Watts.
-        served_job (Job): Job being served by the Resource.
+    processor (``dict``):
+        Parent Processor data structure. Data fields:
+            node (``dict``):
+                Parent Node data structure. Data fields:
+                    cluster (``dict``):
+                        Parent Cluster data structure. Data fields:
+                            platform (``dict``):
+                                Root Platform data structure. Data fields:
+                                    total_nodes (``int``):
+                                        Total Nodes in the Platform.
+                                    total_processors (``int``):
+                                        Total Processors in the Platform.
+                                    total_cores (``int``):
+                                        Total Cores in the Platform.
+                                    job_limits (``dict``):
+                                        Resource request limits for any Job. Data fields:
+                                            max_time (``int``):
+                                                Maximum requested time in seconds.
+                                            max_core (``int``):
+                                                Maximum requested Cores.
+                                            max_mem (``int``):
+                                                Maximum requested Memory in MB.
+                                            max_mem_bw (``int``):
+                                                Maximum requested Memory BW in GB/s.
+                                            reference_machine (``dict``):
+                                                Reference host for measures. Data fields:
+                                                    clock_rate (``float``):
+                                                        Machine clock speed.
+                                                    dpflop_vector_width (``int``):
+                                                        Width of vector operations in 32B blocks.
+
+                                    reference_speed (``float``):
+                                        Speed for tranforming time into operations.
+                                    clusters (``list(dict)``):
+                                        Reference to all Clusters inside the Platform.
+
+                            local_nodes (``list(dict)``):
+                                Reference to local Nodes to the Cluster.
+
+                    max_mem (``int``):
+                        Maximum memory capacity of the Node in MB.
+                    current_mem (``int``):
+                        Current memory capacity of the Node in MB.
+                    local_processors (``list(dict)``):
+                        Reference to local Processors to the Node.
+
+            max_mem_bw (``float``):
+                Maximum memory BW capacity of the Processor in GB/s.
+            current_mem_bw (``float``):
+                Current memory BW capacity of the Processor in GB/s.
+            flops_per_core (``float``):
+                Maximum FLOPs per Core in the Processor.
+            power_per_core (``float``):
+                Maximum Watts per Core in the Processor.
+            local_cores (``list(:class:`.Resource`)``):
+                Reference to local Cores to the Processor.
+
+    bs_id (``int``):S
+        Unique identification. Also used in Batsim.
+    state (``dict``):
+        Defines the current state of the Resource. Data fields:
+            pstate (``int``):
+                P-state for the Core.
+            current_flops (``float``): current computing capability in FLOPs.
+            current_power (``float``): current power consumption in Watts.
+            served_job (``Job``): Job being served by the Resource.
     """
 
     def __init__(self, processor: dict, bs_id: int) -> None:
