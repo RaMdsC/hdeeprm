@@ -12,10 +12,12 @@ computing capability for a given power consumption.
 
 Attributes:
     processor (dict): Parent Processor data structure. Data fields:
-        node (dict): Parent Node data structure. Data fields:
-            cluster (dict): Parent Cluster data structure. Data fields:
-                platform (dict): Root Platform data structure. Data fields:
-                    total_nodes (int): Total Nodes in the Platform.
+
+        node (:class:`dict`): Parent Node data structure. Data fields:
+            cluster (:class:`dict`): Parent Cluster data structure. Data fields:
+                platform (:class:`dict`): Root Platform data structure. Data fields:
+                    total_nodes (:class:`int`): Total Nodes in the Platform.
+
                     total_processors (int): Total Processors in the Platform.
                     total_cores (int): Total Cores in the Platform.
                     job_limits (dict): Resource request limits for any Job. Data fields:
