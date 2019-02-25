@@ -11,72 +11,43 @@ Resources process Jobs inside the Platform. They are uniquely identifiable in Ba
 computing capability for a given power consumption.
 
 Attributes:
-    processor (``dict``):
-        Parent Processor data structure. Data fields:
-            node (``dict``):
-                Parent Node data structure. Data fields:
-                    cluster (``dict``):
-                        Parent Cluster data structure. Data fields:
-                            platform (``dict``):
-                                Root Platform data structure. Data fields:
-                                    total_nodes (``int``):
-                                        Total Nodes in the Platform.
-                                    total_processors (``int``):
-                                        Total Processors in the Platform.
-                                    total_cores (``int``):
-                                        Total Cores in the Platform.
-                                    job_limits (``dict``):
-                                        Resource request limits for any Job. Data fields:
-                                            max_time (``int``):
-                                                Maximum requested time in seconds.
-                                            max_core (``int``):
-                                                Maximum requested Cores.
-                                            max_mem (``int``):
-                                                Maximum requested Memory in MB.
-                                            max_mem_bw (``int``):
-                                                Maximum requested Memory BW in GB/s.
-                                            reference_machine (``dict``):
-                                                Reference host for measures. Data fields:
-                                                    clock_rate (``float``):
-                                                        Machine clock speed.
-                                                    dpflop_vector_width (``int``):
-                                                        Width of vector operations in 32B blocks.
+    processor (dict): Parent Processor data structure. Data fields:
+        node (dict): Parent Node data structure. Data fields:
+            cluster (dict): Parent Cluster data structure. Data fields:
+                platform (dict): Root Platform data structure. Data fields:
+                    total_nodes (int): Total Nodes in the Platform.
+                    total_processors (int): Total Processors in the Platform.
+                    total_cores (int): Total Cores in the Platform.
+                    job_limits (dict): Resource request limits for any Job. Data fields:
+                        max_time (int): Maximum requested time in seconds.
+                        max_core (int): Maximum requested Cores.
+                        max_mem (int): Maximum requested Memory in MB.
+                        max_mem_bw (int): Maximum requested Memory BW in GB/s.
+                        reference_machine (dict): Reference host for measures. Data fields:
+                            clock_rate (float): Machine clock speed.
+                            dpflop_vector_width (int): Width of vector operations in 32B blocks.
 
-                                    reference_speed (``float``):
-                                        Speed for tranforming time into operations.
-                                    clusters (``list(dict)``):
-                                        Reference to all Clusters inside the Platform.
+                    reference_speed (float): Speed for tranforming time into operations.
+                    clusters (list(dict)): Reference to all Clusters inside the Platform.
 
-                            local_nodes (``list(dict)``):
-                                Reference to local Nodes to the Cluster.
+                local_nodes (list(dict)): Reference to local Nodes to the Cluster.
 
-                    max_mem (``int``):
-                        Maximum memory capacity of the Node in MB.
-                    current_mem (``int``):
-                        Current memory capacity of the Node in MB.
-                    local_processors (``list(dict)``):
-                        Reference to local Processors to the Node.
+            max_mem (int): Maximum memory capacity of the Node in MB.
+            current_mem (int): Current memory capacity of the Node in MB.
+            local_processors (list(dict)): Reference to local Processors to the Node.
 
-            max_mem_bw (``float``):
-                Maximum memory BW capacity of the Processor in GB/s.
-            current_mem_bw (``float``):
-                Current memory BW capacity of the Processor in GB/s.
-            flops_per_core (``float``):
-                Maximum FLOPs per Core in the Processor.
-            power_per_core (``float``):
-                Maximum Watts per Core in the Processor.
-            local_cores (``list(:class:`.Resource`)``):
-                Reference to local Cores to the Processor.
+        max_mem_bw (float): Maximum memory BW capacity of the Processor in GB/s.
+        current_mem_bw (float): Current memory BW capacity of the Processor in GB/s.
+        flops_per_core (float): Maximum FLOPs per Core in the Processor.
+        power_per_core (float): Maximum Watts per Core in the Processor.
+        local_cores (list(:class:`.Resource`)): Reference to local Cores to the Processor.
 
-    bs_id (``int``):S
-        Unique identification. Also used in Batsim.
-    state (``dict``):
-        Defines the current state of the Resource. Data fields:
-            pstate (``int``):
-                P-state for the Core.
-            current_flops (``float``): current computing capability in FLOPs.
-            current_power (``float``): current power consumption in Watts.
-            served_job (``Job``): Job being served by the Resource.
+    bs_id (int): Unique identification. Also used in Batsim.
+    state (dict): Defines the current state of the Resource. Data fields:
+        pstate (int): P-state for the Core.
+        current_flops (float): current computing capability in FLOPs.
+        current_power (float): current power consumption in Watts.
+        served_job (Job): Job being served by the Resource.
     """
 
     def __init__(self, processor: dict, bs_id: int) -> None:

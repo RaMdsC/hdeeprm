@@ -18,11 +18,11 @@ Parses a SWF formatted Workload file into a Batsim-ready JSON file. Generates as
 specified in "nb_jobs".
 
 Args:
-    workload_file_path (``str``):
+    workload_file_path (str):
         Location of the SWF Workload file in the system.
-    nb_resources (``int``):
+    nb_resources (int):
         Total number of resources (Cores) in the Platform.
-    nb_jobs (``int``):
+    nb_jobs (int):
         Total number of jobs for the generated Workload.
     """
 
@@ -109,11 +109,11 @@ and the Resource Hierarchy pickled for the Decision System to understand relatio
 Processors and Nodes.
 
 Args:
-    platform_file_path (``str``):
+    platform_file_path (str):
         Location of the HDeepRM Platform file in the system.
-    gen_platform_xml (``bool``):
+    gen_platform_xml (bool):
         If ``True``, generate the Platform XML. Defaults to ``True``.
-    gen_res_hierarchy (``bool``):
+    gen_res_hierarchy (bool):
         If ``True``, generate the Resource Hierarchy. Defaults to ``False``.
     """
 
