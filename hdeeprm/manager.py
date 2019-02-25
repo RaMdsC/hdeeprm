@@ -147,9 +147,8 @@ Returns:
         self.state_changes = {**self.state_changes, **modified}
         return ProcSet(*selected)
 
-    def update_state(self, job, id_list, new_state, now):
-        """
-        Modifies the state of the computing resources.
+    def update_state(self, job: Job, id_list: list, new_state: int, now: float) -> dict:
+        """Modifies the state of the computing resources.
         This affects speed, power and availability for selection.
         Modifications are local to the Decision System until communicated
         to the Simulator.
