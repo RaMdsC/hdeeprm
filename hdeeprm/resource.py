@@ -1,13 +1,13 @@
 """
-Resource class and functionality for defining the Resource Hierarchy in the Decision System.
+Core class and functionality for defining the Resource Hierarchy in the Decision System.
 """
 
 from batsim.batsim import Job
 
-class Resource:
-    """Resource representing a Core in the Platform.
+class Core:
+    """Core representing a compute resource in the Platform.
 
-Resources process Jobs inside the Platform. They are uniquely identifiable in Batsim and provide a
+Cores process Jobs inside the Platform. They are uniquely identifiable in Batsim and provide a
 computing capability for a given power consumption.
 
 Attributes:
@@ -46,15 +46,15 @@ Attributes:
       | current_mem_bw (:class:`float`) - Current memory BW capacity of the Processor in GB/s.
       | flops_per_core (:class:`float`) - Maximum FLOPs per Core in the Processor.
       | power_per_core (:class:`float`) - Maximum Watts per Core in the Processor.
-      | local_cores (list(:class:`.Resource`)) - Reference to local Cores to the Processor.
+      | local_cores (list(:class:`.Core`)) - Reference to local Cores to the Processor.
 
     bs_id (int): Unique identification. Also used in Batsim.
-    state (dict): Defines the current state of the Resource. Data fields:
+    state (dict): Defines the current state of the Core. Data fields:
 
       | pstate (:class:`int`) - P-state for the Core.
       | current_flops (:class:`float`) - Current computing capability in FLOPs.
       | current_power (:class:`float`) - Current power consumption in Watts.
-      | served_job (Job) - Job being served by the Resource.
+      | served_job (Job) - Job being served by the Core.
     """
 
     def __init__(self, processor: dict, bs_id: int) -> None:
@@ -65,24 +65,24 @@ Attributes:
             'pstate': 3,
             'current_flops': 0.0,
             'current_power': 0.05 * self.processor['power_per_core'],
-            # When active, the Resource is serving a Job which is stored as part of its state
+            # When active, the Core is serving a Job which is stored as part of its state
             # Remaining operations and updates along simulation are tracked
             'served_job': None
         }
 
     def set_state(self, new_pstate: int, now: float, new_served_job: Job = None) -> None:
-        """Sets the state of the Resource.
+        """Sets the state of the Core.
 
 It modifies the availability, computing speed and power consumption. It also establishes a new
-served Job in case the Resource is now active.
+served Job in case the Core is now active.
 
 Args:
     new_pstate (int):
-        New P-state for the Resource.
+        New P-state for the Core.
     now (float):
         Current simulation time in seconds.
     new_served_job (Job):
-        Reference to the Job now being served by the Resource. Defaults to None.
+        Reference to the Job now being served by the Core. Defaults to None.
         """
 
         # Active core

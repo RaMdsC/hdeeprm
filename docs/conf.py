@@ -175,6 +175,7 @@ autodoc_mock_imports = ['torch']
 # -- Options for intersphinx extension ---------------------------------------
 
 intersphinx_mapping = {
-    'python': ('https://docs.python.org/', None),
+    'python': ('https://docs.python.org/3/', None),
+    'numpy': ('https://docs.scipy.org/doc/numpy/', None),
     'procset': ('https://procset.readthedocs.io/en/stable/', None)
 }

@@ -1,124 +1,142 @@
 """
-Environment for the Workload Management task. This is compliant with OpenAI gym environment format.
+The Environment is the representation of the Agent's observable context.
 """
 
 import logging
 import gym
 import gym.spaces
 import numpy as np
+from hdeeprm.entrypoints.HDeepRMWorkloadManager import HDeepRMWorkloadManager
 
 class HDeepRMEnv(gym.Env):
+    """Environment for Workload Management in HDeepRM.
+
+It is composed of an Action space and an Observation space. For every decision step, the Agent
+selects an Action, which is applied to the Environment. This involves mapping pending Jobs to
+available Cores. Changes in Environment's state are manifested as Observations. For each Action
+taken, the Environment provides a Reward as feedback to the Agent based on its objective. The
+Environment implementation is compliant with OpenAI gym format.
+
+Any Observation is formed by the following data fields:
+  | Fraction of available memory in each Node
+  | Fraction of available memory bandwidth in each Processor
+  | Fraction of current FLOPs and Watts with respect to the maximum values for each Core
+  | Fraction left for completing the served Job by the Core
+  | Fraction of requested resources with respect to the maximum values of requested
+    time/cores/mem/mem_bw for pending Jobs; five percentiles are shown (min, Q1, med, Q3, max) such
+    that the network can devise a Job distribution
+  | Variability ratio of Job Queue size with respect to last observation
+
+The Action space is constituted by 26 possible actions, including a void action:
+  +-------------------+------------------------------------------------------------------------+
+  | Job selection     | Core selection                                                         |
+  +===================+========+=================+=============+================+==============+
+  |                   | Random | Highest compute | Highest mem | Highest mem BW | Lowest power |
+  +-------------------+--------+-----------------+-------------+----------------+--------------+
+  | Random            | 0      | 1               | 2           | 3              | 4            |
+  +-------------------+--------+-----------------+-------------+----------------+--------------+
+  | First arrived     | 5      | 6               | 7           | 8              | 9            |
+  +-------------------+--------+-----------------+-------------+----------------+--------------+
+  | Shortest          | 10     | 11              | 12          | 13             | 14           |
+  +-------------------+--------+-----------------+-------------+----------------+--------------+
+  | Lowest req mem    | 15     | 16              | 17          | 18             | 19           |
+  +-------------------+--------+-----------------+-------------+----------------+--------------+
+  | Lowest req mem BW | 20     | 21              | 22          | 23             | 24           |
+  +-------------------+--------+-----------------+-------------+----------------+--------------+
+  |                   |        |                 |             | Void action    | 25           |
+  +-------------------+--------+-----------------+-------------+----------------+--------------+
+
+Possible objectives for the Agent and thus rewards:
+  | Average Job Slowdown: on average, how much of the service time is due to stalling of Jobs in
+    the Job Queue.
+  | Average Job Completion Time: on average, how much service time for Jobs in the Platform.
+  | Utilization: number of active Cores over the simulation time.
+  | Makespan: time span from the arrival of the absolute first Job until the completion of the
+    absolute last Job.
+  | Energy consumption: total amount of energy consumed during the simulation.
+
+Attributes:
+    workload_manager (:class:`~hdeeprm.entrypoints.HDeepRMWorkloadManager`):
+        Reference to HDeepRM Workload Manager required to schedule the Jobs on the decision step.
+    action_space (gym.spaces.Discrete):
+        The Action space described above. See `Spaces <https://gym.openai.com/docs/#spaces>`_.
+    action_keys (list):
+        List of sorting key pairs indexed by action IDs. Keys are applied to the Job Scheduler and
+          the Resource Manager selections.
+    observation_space (gym.spaces.Box):
+        The Observation space described above. See `Spaces <https://gym.openai.com/docs/#spaces>`_.
+    observation (:class:`~numpy.ndarray`):
+        Current Observation for the Agent, representative of the Environment state.
+    get_reward (function):
+        Mapped to a reward function depending on the Agent's objective.
+    queue_sensitivity (float):
+        Sensitivity of the Agent to variations in Job Queue size. If sensitivity is high, larger
+          variations will be noticed, however smaller ones will not have significant impact. If
+            sensitivity is low, smaller variations will be noticed and large ones will be clipped,
+              thus impactless.
+    last_job_queue_length (int):
+        Last value of the Job Queue length. Used for calculating the variability ratio.
     """
-    Description
-        Jobs arrive at an HPC heterogeneous cluster. A workload manager is in charge
-        of scheduling the jobs over the available computing resources.
 
-    Observation space
-        Composed of the following data fields:
-        - % of available memory in each node
-        - % of available memory bandwidth in each processor
-        - % of working FLOPS and working Power for each core
-        - % left for completing the served job by the core
-        - % with respect to the maximum values of requested time/cores/mem/mem_bw
-          for pending jobs; we show five percentiles (min, Q1, med, Q3, max) such
-          that the network can devise a job distribution
-        - % variability of job queue size with respect to last observation
-
-    Action space
-        There are 26 possible actions
-        Num     Action
-        0       Random job, random resource
-        1       Random job, highest computing capability resource
-        2       Random job, less memory conflicted resource
-        3       Random job, less memory bandwidth conflicted resource
-        4       Random job, lowest energy consuming resource
-        5       First arrived job, random resource
-        6       First arrived job, highest computing capability resource
-        7       First arrived job, less memory conflicted resource
-        8       First arrived job, less memory bandwidth conflicted resource
-        9       First arrived job, lowest energy consuming resource
-        10      Shortest job, random resource
-        11      Shortest job, highest computing capability resource
-        12      Shortest job, less memory conflicted resource
-        13      Shortest job, less memory bandwidth conflicted resource
-        14      Shortest job, lowest energy consuming resource
-        15      Lowest memory job, random resource
-        16      Lowest memory job, highest computing capability resource
-        17      Lowest memory job, less memory conflicted resource
-        18      Lowest memory job, less memory bandwidth conflicted resource
-        19      Lowest memory job, lowest energy consuming resource
-        20      Lowest memory bandwidth job, random resource
-        21      Lowest memory bandwidth job, highest computing capability resource
-        22      Lowest memory bandwidth job, less memory conflicted resource
-        23      Lowest memory bandwidth job, less memory bandwidth conflicted resource
-        24      Lowest memory bandwidth job, lowest energy consuming resource
-        25      Void action, reserve jobs for next scheduling round
-    """
-
-    def __init__(self, workload_manager, objective, queue_sensitivity):
-        # These are references to decision system elements
-        # required for the environment progress
+    def __init__(self, workload_manager: HDeepRMWorkloadManager, objective: str,
+                 queue_sensitivity: float) -> None:
+        # Reference to the Workload Manager required for the environment progress
         self.workload_manager = workload_manager
-        self.job_scheduler = workload_manager.job_scheduler
-        self.resource_manager = workload_manager.resource_manager
 
         # Action space
-        # Agent may choose between 26 policies
-        # These are implemented by varying the sorting key of data structures
+        # Implemented by varying the sorting key of data structures
         self.action_space = gym.spaces.Discrete(26)
         self.action_keys = [
             (None, None),
-            (None, lambda res: - res.processor.flops_per_core),
-            (None, lambda res: - res.processor.node.current_mem),
-            (None, lambda res: - res.processor.current_mem_bw),
-            (None, lambda res: res.processor.power_per_core),
+            (None, lambda res: - res.processor['flops_per_core']),
+            (None, lambda res: - res.processor['node']['current_mem']),
+            (None, lambda res: - res.processor['current_mem_bw']),
+            (None, lambda res: res.processor['power_per_core']),
             (lambda job: job.submit_time, None),
-            (lambda job: job.submit_time, lambda res: - res.processor.flops_per_core),
-            (lambda job: job.submit_time, lambda res: - res.processor.node.current_mem),
-            (lambda job: job.submit_time, lambda res: - res.processor.current_mem_bw),
-            (lambda job: job.submit_time, lambda res: res.processor.power_per_core),
+            (lambda job: job.submit_time, lambda res: - res.processor['flops_per_core']),
+            (lambda job: job.submit_time, lambda res: - res.processor['node']['current_mem']),
+            (lambda job: job.submit_time, lambda res: - res.processor['current_mem_bw']),
+            (lambda job: job.submit_time, lambda res: res.processor['power_per_core']),
             (lambda job: job.req_time, None),
-            (lambda job: job.req_time, lambda res: - res.processor.flops_per_core),
-            (lambda job: job.req_time, lambda res: - res.processor.node.current_mem),
-            (lambda job: job.req_time, lambda res: - res.processor.current_mem_bw),
-            (lambda job: job.req_time, lambda res: res.processor.power_per_core),
+            (lambda job: job.req_time, lambda res: - res.processor['flops_per_core']),
+            (lambda job: job.req_time, lambda res: - res.processor['node']['current_mem']),
+            (lambda job: job.req_time, lambda res: - res.processor['current_mem_bw']),
+            (lambda job: job.req_time, lambda res: res.processor['power_per_core']),
             (lambda job: job.mem, None),
-            (lambda job: job.mem, lambda res: - res.processor.flops_per_core),
-            (lambda job: job.mem, lambda res: - res.processor.node.current_mem),
-            (lambda job: job.mem, lambda res: - res.processor.current_mem_bw),
-            (lambda job: job.mem, lambda res: res.processor.power_per_core),
+            (lambda job: job.mem, lambda res: - res.processor['flops_per_core']),
+            (lambda job: job.mem, lambda res: - res.processor['node']['current_mem']),
+            (lambda job: job.mem, lambda res: - res.processor['current_mem_bw']),
+            (lambda job: job.mem, lambda res: res.processor['power_per_core']),
             (lambda job: job.mem_bw, None),
-            (lambda job: job.mem_bw, lambda res: - res.processor.flops_per_core),
-            (lambda job: job.mem_bw, lambda res: - res.processor.node.current_mem),
-            (lambda job: job.mem_bw, lambda res: - res.processor.current_mem_bw),
-            (lambda job: job.mem_bw, lambda res: res.processor.power_per_core)
+            (lambda job: job.mem_bw, lambda res: - res.processor['flops_per_core']),
+            (lambda job: job.mem_bw, lambda res: - res.processor['node']['current_mem']),
+            (lambda job: job.mem_bw, lambda res: - res.processor['current_mem_bw']),
+            (lambda job: job.mem_bw, lambda res: res.processor['power_per_core'])
         ]
         self.action_size = self.action_space.n
 
         # Observation space
-        # Composed of different data from the data centre state
-        self.observation_size = self.resource_manager.platform.total_nodes +\
-                                self.resource_manager.platform.total_processors +\
-                                self.resource_manager.platform.total_cores * 3 + 21
-        self.observation_space = gym.spaces.Box(low=np.zeros(self.observation_size, dtype=np.float32),
-                                                high=np.ones(self.observation_size, dtype=np.float32),
+        observation_size = self.workload_manager.resource_manager.platform['total_nodes'] +\
+                           self.workload_manager.resource_manager.platform['total_processors'] +\
+                           self.workload_manager.resource_manager.platform['total_cores'] * 3 + 21
+        self.observation_space = gym.spaces.Box(low=np.zeros(observation_size, dtype=np.float32),
+                                                high=np.ones(observation_size, dtype=np.float32),
                                                 dtype=np.float32)
         self.observation = None
+
         # Sets the correspondent reward function based on the objective
         objective_to_reward = {
             'avg_job_slowdown': self.avg_job_slowdown_reward,
             'avg_job_completion': self.avg_job_completion_reward,
             'utilization': self.utilization_reward,
-            'makespan': self.makespan_reward
+            'makespan': self.makespan_reward,
+            'energy_consumption': self.energy_consumption_reward
         }
         self.get_reward = objective_to_reward[objective]
         
-        # Queue sensitivity. Determines sensitivity of the agent to variations in queue size.
-        # If sensitivity is high, larger variations will be noticed, however smaller
-        # ones will not have much impact.
-        # If sensitivity is low, smaller variations will be noticed and large ones
-        # will be clipped, thus impactless.
+        # Queue sensitivity.
         self.queue_sensitivity = queue_sensitivity
+
         # Last value of the job queue length for calculating increments
         self.last_job_queue_length = 0
 

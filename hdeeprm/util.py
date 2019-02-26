@@ -11,7 +11,7 @@ import numpy.random as nprnd
 import hdeeprm.resource as res
 from hdeeprm.__xml__ import exml, XMLElement
 
-def generate_workload(workload_file_path: str, nb_resources: int, nb_jobs: int) -> None:
+def generate_workload(workload_file_path: str, nb_cores: int, nb_jobs: int) -> None:
     """SWF-formatted Workload -> Batsim-ready JSON format.
 
 Parses a SWF formatted Workload file into a Batsim-ready JSON file. Generates as many jobs as
@@ -20,8 +20,8 @@ specified in "nb_jobs".
 Args:
     workload_file_path (str):
         Location of the SWF Workload file in the system.
-    nb_resources (int):
-        Total number of resources (Cores) in the Platform.
+    nb_cores (int):
+        Total number of Cores in the Platform.
     nb_jobs (int):
         Total number of jobs for the generated Workload.
     """
@@ -29,7 +29,7 @@ Args:
     with open(workload_file_path, 'r') as in_f:
         # Workload
         workload = {
-            'nb_res': nb_resources,
+            'nb_res': nb_cores,
             'jobs': [],
             'profiles': {}
         }
@@ -57,7 +57,7 @@ Args:
                 'mem': job_info[9],
                 'mem_bw': None
             }
-            # Skip if submission time, requested resources, requested time per resource and both
+            # Skip if submission time, requested cores, requested time per core and both
             # memory parameters are not specified. In SWF, this is indicated by - 1.
             # job_info[6] = used_mem
             if any(map(lambda parameter: parameter < 0,
@@ -73,7 +73,7 @@ Args:
             if not min_submit_time:
                 min_submit_time = job['subtime']
             job['subtime'] -= min_submit_time
-            # Calculate FLOPs per resource. The original trace provides time per resource, here it
+            # Calculate FLOPs per core. The original trace provides time per core, here it
             # is normalized to FLOPs with respect to a 2.75 GHz 8-wide vector CPU (reference
             # machine, 22e9 ops/s)
             profile['req_ops'] = int(22e9 * profile['req_time'])
@@ -87,7 +87,7 @@ Args:
             ) * profile['req_time'])
             # Original trace provides memory in KB, convert it to MB for framework compatibility
             profile['mem'] = int(profile['mem'] / 1000)
-            # Calculate the sustained memory bandwidth requirement per resource. No info on original
+            # Calculate the sustained memory bandwidth requirement per core. No info on original
             # trace, this is synthetically produced from a random uniform distribution with values
             # (4, 8, 12, 16, 20, 24).
             profile['mem_bw'] = int(nprnd.choice(numpy.arange(4, 25, 4)))
@@ -318,7 +318,7 @@ def _core_xml(shared_state: dict, flops_per_core_xml: dict, power_per_core_xml: 
                                           f'udl_{shared_state["counters"]["node"]}'))
 
 def _core_el(shared_state: dict, proc_el: dict) -> None:
-    core_el = res.Resource(proc_el, shared_state['counters']['core'])
+    core_el = res.Core(proc_el, shared_state['counters']['core'])
     proc_el.node.cluster.platform.total_cores += 1
     proc_el.local_cores.append(core_el)
     shared_state['core_pool'].append(core_el)

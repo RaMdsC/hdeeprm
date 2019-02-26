@@ -1,5 +1,5 @@
 """
-Defines HDeepRM managers, which are in charge of mapping Jobs into Resources.
+Defines HDeepRM managers, which are in charge of mapping Jobs to resources.
 """
 
 import logging
@@ -75,30 +75,30 @@ It uses the cached peeked Job for removal.
         return len(self.pending_jobs)
 
 class ResourceManager:
-    """Selects Resources and maintains Resource states for serving incoming Jobs.
+    """Selects Cores and maintains Core states for serving incoming Jobs.
 
-The Resource selection policy is defined by the sorting key. The Core Pool is filtered by this key
-to obtain the required Resources by the Job. Resources have a state, which describes their
-availability as well as computational capability and power consumption. Resource selection might
-fail if there are not enough available Resources for the selected Job.
+The Core selection policy is defined by the sorting key. The Core Pool is filtered by this key
+to obtain the required resources by the Job. Cores have a state, which describes their
+availability as well as computational capability and power consumption. Core selection might
+fail if there are not enough available resources for the selected Job.
 
 Attributes:
     state_changes (dict):
-        Maps Resources to P-state changes for sending to Batsim
+        Maps Cores to P-state changes for sending to Batsim
     platform (dict):
-        Resource Hierarchy for relations. See :class:`~hdeeprm.resource.Resource` for fields.
+        Resource Hierarchy for relations. See :class:`~hdeeprm.resource.Core` for fields.
     core_pool (list):
-        Contains all Resources (Cores) in the Platform for filtering.
+        Contains all Cores in the Platform for filtering.
     sorting_key (function):
-        Key defining the Resource selection policy.
+        Key defining the Core selection policy.
     """
 
     def __init__(self) -> None:
-        # Store the PState changes for the resources
+        # Store the PState changes for the Cores
         self.state_changes = {}
         with open('./res_hierarchy.pkl', 'rb') as in_f:
             self.platform, self.core_pool = pickle.load(in_f)
-        # Used for sorting the resources
+        # Used for sorting the Cores
         self.sorting_key = None
 
     def get_resources(self, job: Job, now: float) -> ProcSet:
@@ -108,12 +108,12 @@ State of resources change as they are being selected.
 
 Args:
     job (Job):
-        Job to be served by the selected Resources. Used for checking requirements.
+        Job to be served by the selected Cores. Used for checking requirements.
     now (float):
         Current simulation time in seconds.
 
 Returns:
-    Set of Resources as a :class:`procset.ProcSet`. None if not enough Resources available.
+    Set of Cores as a :class:`~procset.ProcSet`. None if not enough resources available.
         """
 
         # Save the temporarily selected cores. We might not be able to provide the
@@ -125,7 +125,7 @@ Returns:
         for _ in range(job.requested_resources):
             available = [core for core in self.core_pool if not core.state['served_job'] and\
                          core.processor['node']['current_mem'] >= job.mem]
-            # Sorting is needed everytime we access since completed jobs or assigned resources
+            # Sorting is needed everytime we access since completed jobs or assigned cores
             # might have changed the state
             if self.sorting_key:
                 available.sort(key=self.sorting_key)
@@ -156,56 +156,56 @@ on Cores in the same Processor or Node scope due to shared resources.
 
 Args:
     job (Job):
-        Job served by the selected Resources. Used for updating resource contention.
+        Job served by the selected Cores. Used for updating resource contention.
     id_list (list):
-        IDs of the Resources directly to be updated.
+        IDs of the Cores to be updated directly.
     new_state (str):
-        Either "LOCKED" (makes Resources unavailable) or "FREE" (makes Resources available).
+        Either "LOCKED" (makes Cores unavailable) or "FREE" (makes Cores available).
     now (float):
         Current simulation time in seconds.
 
 Returns:
-    A dictionary with all directly and indirectly modified Resources. Keys are the Resources IDs,
-    values are the new P-states.
+    A dictionary with all directly and indirectly modified Cores. Keys are the Cores IDs, values are
+    the new P-states.
         """
 
         # Modify states of the cores
         # We associate each affected core with a new P-State
         modified = {}
         for bs_id in id_list:
-            resource = self.core_pool[bs_id]
-            processor = resource.processor
+            score = self.core_pool[bs_id]
+            processor = score.processor
             if new_state == 'LOCKED':
-                resource.set_state(0, now, job)
-                modified[resource.bs_id] = 0
-                for core in processor['local_cores']:
+                score.set_state(0, now, job)
+                modified[score.bs_id] = 0
+                for lcore in processor['local_cores']:
                     # If this is the first active core in the processor,
                     # set the state of the rest of cores to 2 (indirect energy consumption)
-                    if core.state['pstate'] == 3:
-                        core.set_state(2, now)
-                        modified[core.bs_id] = 2
+                    if lcore.state['pstate'] == 3:
+                        lcore.set_state(2, now)
+                        modified[lcore.bs_id] = 2
                     # If the memory bandwidth capacity is now overutilized,
                     # transition every active core of the processor into state 1 (reduced FLOPS)
-                    if processor['current_mem_bw'] < 0.0 and core.state['pstate'] == 0:
+                    if processor['current_mem_bw'] < 0.0 and lcore.state['pstate'] == 0:
                         logging.warning('Memory bandwidth overutilized!')
-                        core.set_state(1, now)
-                        modified[core.bs_id] = 1
+                        lcore.set_state(1, now)
+                        modified[lcore.bs_id] = 1
             elif new_state == 'FREE':
-                resource.set_state(2, now)
-                modified[resource.bs_id] = 2
-                all_inactive = all(not core.state['served_job']
-                                   for core in processor['local_cores'])
-                for core in processor['local_cores']:
+                score.set_state(2, now)
+                modified[score.bs_id] = 2
+                all_inactive = all(not lcore.state['served_job']
+                                   for lcore in processor['local_cores'])
+                for lcore in processor['local_cores']:
                     # If this was the last core being utilized, lower all
                     # cores of processor from indirect energy consuming
                     if all_inactive:
-                        core.set_state(3, now)
-                        modified[core.bs_id] = 3
+                        lcore.set_state(3, now)
+                        modified[lcore.bs_id] = 3
                     # If bandwidth is now not overutilized, scale
                     # to full potential (P0) other active cores
-                    if processor['current_mem_bw'] >= 0.0 and core.state['pstate'] == 1:
-                        core.set_state(0, now)
-                        modified[core.bs_id] = 0
+                    if processor['current_mem_bw'] >= 0.0 and lcore.state['pstate'] == 1:
+                        lcore.set_state(0, now)
+                        modified[lcore.bs_id] = 0
             else:
                 raise ValueError('Error: unknown state')
         return modified
