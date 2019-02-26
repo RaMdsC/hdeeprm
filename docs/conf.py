@@ -106,8 +106,7 @@ pygments_style = None
 html_theme = 'alabaster'
 
 html_theme_options = {
-    'description': ('Framework for testing Deep Reinforcement Learning policies in heterogeneous '
-                    'Workload Management'),
+    'description': meta.DESCRIPTION,
     'fixed_sidebar': 'true'
 }
 

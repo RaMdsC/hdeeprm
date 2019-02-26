@@ -1,9 +1,6 @@
-Welcome to HDeepRM's documentation!
-===================================
-
 .. toctree::
-   :maxdepth: 2
-   :caption: Contents:
+   :hidden:
+   :titlesonly:
 
    source/overview
    source/packages/modules

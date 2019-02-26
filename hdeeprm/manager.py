@@ -149,9 +149,15 @@ Returns:
 
     def update_state(self, job: Job, id_list: list, new_state: int, now: float) -> dict:
         """Modifies the state of the computing resources.
-        This affects speed, power and availability for selection.
-        Modifications are local to the Decision System until communicated
-        to the Simulator.
+
+This affects speed, power and availability for selection. Modifications are local to the Decision
+System until communicated to the Simulator.
+
+Args:
+    job (Job):
+        Job served by the selected Resources. Used for updating resource contention.
+    id_list (list):
+        
         """
 
         # Modify states of the cores
