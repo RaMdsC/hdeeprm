@@ -8,6 +8,8 @@
    source/changelog
    source/credits
 
+.. include:: source/overview
+
 Indices and tables
 ==================
 

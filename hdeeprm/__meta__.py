@@ -17,7 +17,7 @@ PATH = NAME
 VERSION = '0.1.0.beta'
 AUTHOR = 'Adrián Herrera'
 AUTHOR_EMAIL = 'adr.her.arc.95@gmail.com'
-DESCRIPTION = 'Evaluate Deep Reinforcement Learning policies for heterogeneous Workload Management',
+DESCRIPTION = 'Evaluate Deep Reinforcement Learning policies for heterogeneous Workload Management'
 KEYWORDS = ('deep reinforcement learning workload management job scheduling resource simulator '
             'framework heterogeneous cluster batsim')
 URL = 'https://github.com/RaMdsC/hdeeprm'
