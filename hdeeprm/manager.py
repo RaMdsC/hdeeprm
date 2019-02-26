@@ -123,8 +123,8 @@ Returns:
         # to Batsim
         modified = {}
         for _ in range(job.requested_resources):
-            available = [core for core in self.core_pool if not core.served_job and\
-                         core.processor.node.current_mem >= job.mem]
+            available = [core for core in self.core_pool if not core.state['served_job'] and\
+                         core.processor['node']['current_mem'] >= job.mem]
             # Sorting is needed everytime we access since completed jobs or assigned resources
             # might have changed the state
             if self.sorting_key:
@@ -139,7 +139,7 @@ Returns:
                 # Add its ID to the temporarily selected core buffer
                 selected.append(selected_id)
             else:
-                # There are no sufficient resources, return the state of the
+                # There are no sufficient resources, revert the state of the
                 # temporarily selected
                 self.update_state(job, selected, 'FREE', now)
                 return None
@@ -147,46 +147,55 @@ Returns:
         self.state_changes = {**self.state_changes, **modified}
         return ProcSet(*selected)
 
-    def update_state(self, job: Job, id_list: list, new_state: int, now: float) -> dict:
+    def update_state(self, job: Job, id_list: list, new_state: str, now: float) -> dict:
         """Modifies the state of the computing resources.
 
 This affects speed, power and availability for selection. Modifications are local to the Decision
-System until communicated to the Simulator.
+System until communicated to the Simulator. Modifying the state of a Core might trigger alterations
+on Cores in the same Processor or Node scope due to shared resources.
 
 Args:
     job (Job):
         Job served by the selected Resources. Used for updating resource contention.
     id_list (list):
-        
+        IDs of the Resources directly to be updated.
+    new_state (str):
+        Either "LOCKED" (makes Resources unavailable) or "FREE" (makes Resources available).
+    now (float):
+        Current simulation time in seconds.
+
+Returns:
+    A dictionary with all directly and indirectly modified Resources. Keys are the Resources IDs,
+    values are the new P-states.
         """
 
         # Modify states of the cores
         # We associate each affected core with a new P-State
         modified = {}
-        logging.debug('From update_state - Resource ID list: %s', id_list)
         for bs_id in id_list:
             resource = self.core_pool[bs_id]
             processor = resource.processor
             if new_state == 'LOCKED':
                 resource.set_state(0, now, job)
                 modified[resource.bs_id] = 0
-                for core in processor.local_cores:
+                for core in processor['local_cores']:
                     # If this is the first active core in the processor,
                     # set the state of the rest of cores to 2 (indirect energy consumption)
-                    if core.pstate == 3:
+                    if core.state['pstate'] == 3:
                         core.set_state(2, now)
                         modified[core.bs_id] = 2
                     # If the memory bandwidth capacity is now overutilized,
                     # transition every active core of the processor into state 1 (reduced FLOPS)
-                    if processor.current_mem_bw < 0.0 and core.pstate == 0:
+                    if processor['current_mem_bw'] < 0.0 and core.state['pstate'] == 0:
                         logging.warning('Memory bandwidth overutilized!')
                         core.set_state(1, now)
                         modified[core.bs_id] = 1
             elif new_state == 'FREE':
                 resource.set_state(2, now)
                 modified[resource.bs_id] = 2
-                all_inactive = all(not core.served_job for core in processor.local_cores)
-                for core in processor.local_cores:
+                all_inactive = all(not core.state['served_job']
+                                   for core in processor['local_cores'])
+                for core in processor['local_cores']:
                     # If this was the last core being utilized, lower all
                     # cores of processor from indirect energy consuming
                     if all_inactive:
@@ -194,10 +203,9 @@ Args:
                         modified[core.bs_id] = 3
                     # If bandwidth is now not overutilized, scale
                     # to full potential (P0) other active cores
-                    if processor.current_mem_bw >= 0.0 and core.pstate == 1:
+                    if processor['current_mem_bw'] >= 0.0 and core.state['pstate'] == 1:
                         core.set_state(0, now)
                         modified[core.bs_id] = 0
             else:
-                print('Error: unknown state')
-                raise ValueError
+                raise ValueError('Error: unknown state')
         return modified

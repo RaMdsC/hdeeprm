@@ -1,6 +1,5 @@
 """
-Environment for the Workload Management task.
-This is compliant with OpenAI gym environment format.
+Environment for the Workload Management task. This is compliant with OpenAI gym environment format.
 """
 
 import logging
