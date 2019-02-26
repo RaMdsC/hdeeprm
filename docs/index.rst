@@ -8,7 +8,7 @@
    source/changelog
    source/credits
 
-.. include:: source/overview
+.. include:: source/overview.rst
 
 Indices and tables
 ==================
