@@ -7,7 +7,9 @@
    source/changelog
    source/credits
 
-.. include:: ./source/overview.rst
+.. include:: ../README.rst
+   :start-after: include-overview-start
+   :end-before: include-overview-end
 
 Indices and tables
 ------------------

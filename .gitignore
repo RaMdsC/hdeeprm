@@ -9,4 +9,5 @@ dist/
 .vscode/
 # Documentation build
 docs/_build/
+docs/source/packages/
 

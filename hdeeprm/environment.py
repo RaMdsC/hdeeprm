@@ -205,6 +205,12 @@ class HDeepRMEnv(gym.Env):
             # Schedule jobs
             self.workload_manager.schedule_jobs()
 
+    def render(self):
+        pass
+
+    def reset(self):
+        pass
+
     def avg_job_slowdown_reward(self):
         """
         Calculates the reward when the objetive is to minimize
