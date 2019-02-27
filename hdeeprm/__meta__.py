@@ -8,13 +8,13 @@ Attributes:
     AUTHOR (str): author of the package.
     AUTHOR_EMAIL (str): email of the author.
     DESCRIPTION (str): short summary of the package objective.
-    KEYWORDS (str): keywords related to the package. 
+    KEYWORDS (str): keywords related to the package.
     URL (str): online location for the GitHub repository of the package.
 """
 
 NAME = 'hdeeprm'
 PATH = NAME
-VERSION = '0.1.0.beta'
+VERSION = '0.1.0.b1'
 AUTHOR = 'Adrián Herrera'
 AUTHOR_EMAIL = 'adr.her.arc.95@gmail.com'
 DESCRIPTION = 'Evaluate Deep Reinforcement Learning policies for heterogeneous Workload Management'
