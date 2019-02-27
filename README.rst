@@ -95,5 +95,115 @@ See `agent examples <TODO>`_ for reference.
 The ``options.json`` specifies the experiment parameters. The JSON structure
 is as follows:
 
+.. code-block:: json
+
+  {
+    "seed",
+    "nb_resources",
+    "nb_jobs",
+    "workload_file_path",
+    "platform_file_path,
+    "pybatsim": {
+      "log_level",
+      "env": {
+        "objective",
+        "queue_sensitivity"
+      },
+      "agent": {
+        "policy_pair",
+        "run",
+        "hidden",
+        "lr",
+        "gamma"
+      }
+    }
+  }
+
+Global options:
+
+* ``seed`` - The random seed for evaluation reproducibility.
+* ``nb_resources`` - Total number of cores in the simulated platform.
+* ``nb_jobs`` - Total number of jobs to generate in the workload.
+* ``workload_file_path`` - Location of the original SWF formatted workload.
+* ``platform_file_path`` - Location of the original
+  HDeepRM JSON formatted platform.
+
+PyBatsim options:
+
+* ``log_level`` - Logging level for showing insights from the simulation. See `Logging <https://docs.python.org/3.6/howto/logging.html>`_ for reference on possible values.
+
+PyBatsim - Environment options:
+
+* ``objective`` - Metric to be optimised by the agent. See `Objectives <TODO>`_ for an explanation and recognised values.
+* ``queue_sensitivity`` - Sensitivity of the observation to variations in job queue size. See `Hyperparameters - Queue Sensitivity <TODO>`_.
+
+PyBatsim - Agent options:
+
+* ``policy_pair`` - For :class:`~hdeeprm.agent.ClassicAgent` and derived only. The job and resource selection policies. Policy pairs are further described in `Environment - Action Space <TODO>`_.
+* ``run`` - For :class:`~hdeeprm.agent.LearningAgent` and derived only.
+  Type of run for the learning agent, can be *train* or *test*.
+  When training, the agent's inner model is updated,
+  whereas testing is meant for evaluation purposes.
+* ``hidden`` - For :class:`~hdeeprm.agent.LearningAgent` and derived only. Number of units in each hidden layer from the agent's inner model. See `Hyperparameters - Hidden units <TODO>`_.
+* ``lr`` - For :class:`~hdeeprm.agent.LearningAgent` and derived only. Learning rate for updating the agent's inner model. See `Hyperparameters - Learning rate <TODO>`_.
+* ``gamma`` - For :class:`~hdeeprm.agent.LearningAgent` and derived only. Discount factor for rewards. See `Hyperparameters - Reward Discount Factor <TODO>`_.
+
+This is an example of an ``options.json`` file
+for a :class:`~hdeeprm.agent.ClassicAgent`:
+
+.. code-block:: json
+
+  {
+    "seed": 2009,
+    "nb_resources": 2280,
+    "nb_jobs": 10000,
+    "workload_file_path": "/workspace/workloads/my_workload.swf",
+    "platform_file_path: "/workspace/platforms/my_platform.json",
+    "pybatsim": {
+      "log_level": "DEBUG",
+      "env": {
+        "objective": "avg_utilization",
+        "queue_sensitivity": 0.05
+      },
+      "agent": {
+        "policy_pair": "shortest-high_flops"
+      }
+    }
+  }
+
+
+This is another example of an ``options.json`` file,
+in this case for a :class:`~hdeeprm.agent.LearningAgent`:
+
+.. code-block:: json
+
+  {
+    "seed": 1995,
+    "nb_resources": 2280,
+    "nb_jobs": 10000,
+    "workload_file_path": "/workspace/workloads/my_workload.swf",
+    "platform_file_path: "/workspace/platforms/my_platform.json",
+    "pybatsim": {
+      "log_level": "WARNING",
+      "env": {
+        "objective": "makespan",
+        "queue_sensitivity": 0.01
+      },
+      "agent": {
+        "run": "train",
+        "hidden": 128,
+        "lr": 0.001,
+        "gamma": 0.99
+      }
+    }
+  }
+
+The ``inmodel`` optional argument may be used for providing a path
+to a previously trained and saved model. HDeepRM will load this model
+before starting the run.
+
+The ``outmodel`` optional argument may be specified as a path for
+saving the model after the run is finished. If not provide, the model
+won't be saved. This is usually combined with *train* runs.
 
 .. include-overview-end
