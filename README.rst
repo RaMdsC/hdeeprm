@@ -98,23 +98,23 @@ is as follows:
 .. code-block:: json
 
   {
-    "seed",
-    "nb_resources",
-    "nb_jobs",
-    "workload_file_path",
-    "platform_file_path,
+    "seed": "",
+    "nb_resources": "",
+    "nb_jobs": "",
+    "workload_file_path": "",
+    "platform_file_path": "",
     "pybatsim": {
-      "log_level",
+      "log_level": "",
       "env": {
-        "objective",
-        "queue_sensitivity"
+        "objective": "",
+        "queue_sensitivity": ""
       },
       "agent": {
-        "policy_pair",
-        "run",
-        "hidden",
-        "lr",
-        "gamma"
+        "policy_pair": "",
+        "run": "",
+        "hidden": "",
+        "lr": "",
+        "gamma": ""
       }
     }
   }
@@ -139,17 +139,17 @@ PyBatsim - Environment options:
 
 PyBatsim - Agent options:
 
-* ``policy_pair`` - For :class:`~hdeeprm.agent.ClassicAgent` and derived only. The job and resource selection policies. Policy pairs are further described in `Environment - Action Space <TODO>`_.
-* ``run`` - For :class:`~hdeeprm.agent.LearningAgent` and derived only.
+* ``policy_pair`` - For `classic agents <https://hdeeprm.readthedocs.io/en/latest/source/packages/hdeeprm.agent.html#hdeeprm.agent.ClassicAgent>`_ and derived only. The job and resource selection policies. Policy pairs are further described in `Environment - Action Space <TODO>`_.
+* ``run`` - For `learning agents <https://hdeeprm.readthedocs.io/en/latest/source/packages/hdeeprm.agent.html#hdeeprm.agent.LearningAgent>`_ and derived only.
   Type of run for the learning agent, can be *train* or *test*.
   When training, the agent's inner model is updated,
   whereas testing is meant for evaluation purposes.
-* ``hidden`` - For :class:`~hdeeprm.agent.LearningAgent` and derived only. Number of units in each hidden layer from the agent's inner model. See `Hyperparameters - Hidden units <TODO>`_.
-* ``lr`` - For :class:`~hdeeprm.agent.LearningAgent` and derived only. Learning rate for updating the agent's inner model. See `Hyperparameters - Learning rate <TODO>`_.
-* ``gamma`` - For :class:`~hdeeprm.agent.LearningAgent` and derived only. Discount factor for rewards. See `Hyperparameters - Reward Discount Factor <TODO>`_.
+* ``hidden`` - For `learning agents <https://hdeeprm.readthedocs.io/en/latest/source/packages/hdeeprm.agent.html#hdeeprm.agent.LearningAgent>`_ and derived only. Number of units in each hidden layer from the agent's inner model. See `Hyperparameters - Hidden units <TODO>`_.
+* ``lr`` - For `learning agents <https://hdeeprm.readthedocs.io/en/latest/source/packages/hdeeprm.agent.html#hdeeprm.agent.LearningAgent>`_ and derived only. Learning rate for updating the agent's inner model. See `Hyperparameters - Learning rate <TODO>`_.
+* ``gamma`` - For `learning agents <https://hdeeprm.readthedocs.io/en/latest/source/packages/hdeeprm.agent.html#hdeeprm.agent.LearningAgent>`_ and derived only. Discount factor for rewards. See `Hyperparameters - Reward Discount Factor <TODO>`_.
 
 This is an example of an ``options.json`` file
-for a :class:`~hdeeprm.agent.ClassicAgent`:
+for a `classic agent <https://hdeeprm.readthedocs.io/en/latest/source/packages/hdeeprm.agent.html#hdeeprm.agent.ClassicAgent>`_:
 
 .. code-block:: json
 
@@ -158,7 +158,7 @@ for a :class:`~hdeeprm.agent.ClassicAgent`:
     "nb_resources": 2280,
     "nb_jobs": 10000,
     "workload_file_path": "/workspace/workloads/my_workload.swf",
-    "platform_file_path: "/workspace/platforms/my_platform.json",
+    "platform_file_path": "/workspace/platforms/my_platform.json",
     "pybatsim": {
       "log_level": "DEBUG",
       "env": {
@@ -173,7 +173,7 @@ for a :class:`~hdeeprm.agent.ClassicAgent`:
 
 
 This is another example of an ``options.json`` file,
-in this case for a :class:`~hdeeprm.agent.LearningAgent`:
+in this case for a `learning agent <https://hdeeprm.readthedocs.io/en/latest/source/packages/hdeeprm.agent.html#hdeeprm.agent.LearningAgent>`_:
 
 .. code-block:: json
 
@@ -182,7 +182,7 @@ in this case for a :class:`~hdeeprm.agent.LearningAgent`:
     "nb_resources": 2280,
     "nb_jobs": 10000,
     "workload_file_path": "/workspace/workloads/my_workload.swf",
-    "platform_file_path: "/workspace/platforms/my_platform.json",
+    "platform_file_path": "/workspace/platforms/my_platform.json",
     "pybatsim": {
       "log_level": "WARNING",
       "env": {
