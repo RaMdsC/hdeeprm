@@ -89,4 +89,11 @@ In order to experiment with HDeepRM, an integrated launcher is provided:
 
   hdeeprm-launch <agent.py> <options.json> --inmodel <saved_model.pt> --outmodel <to_save_model.pt>
 
+The ``agent.py`` file contains your developed agent for evaluation.
+See `agent examples <TODO>`_ for reference.
+
+The ``options.json`` specifies the experiment parameters. The JSON structure
+is as follows:
+
+
 .. include-overview-end

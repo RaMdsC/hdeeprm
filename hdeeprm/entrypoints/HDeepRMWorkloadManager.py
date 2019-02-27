@@ -34,13 +34,13 @@ Attributes:
     flow_flags (dict):
         Control the event flow. Fields:
 
-        | jobs_submitted (bool) -
-          Becomes ``True`` when at least one job has been submitted.
-        | jobs_completed (bool) -
-          Becomes ``True`` when at least one job has been completed.
-        | action_taken (bool):
-          Becomes ``True`` when an action has been taken by the Agent. This triggers the reward
-            procedure.
+          | jobs_submitted (bool) -
+            Becomes ``True`` when at least one job has been submitted.
+          | jobs_completed (bool) -
+            Becomes ``True`` when at least one job has been completed.
+          | action_taken (bool):
+            Becomes ``True`` when an action has been taken by the Agent. This triggers the reward
+              procedure.
     """
 
     def __init__(self, options: dict) -> None:
@@ -97,8 +97,10 @@ Returns:
         return agent, optimizer
 
     def onSimulationEnds(self) -> None:
-        """Handler triggered when the simulation has ended (SIMULATION_ENDS event).
-
+        """Handler triggered when the simulation has ended.
+        
+Triggered when receiving a
+`SIMULATION_ENDS <https://batsim.readthedocs.io/en/latest/protocol.html#simulation-ends>`_ event.
 If the Agent evaluated has been in training mode, the loss is calculated to update its inner model
 weights. The updated model is saved if the user has indicated so in command line. Rewards are also
 logged for observing performance.
@@ -124,17 +126,17 @@ logged for observing performance.
     def onJobSubmission(self, job: Job) -> None:
         """Set the "jobs_submitted" flag to ``True``.
 
-Further details on this handler on
+Further details on this handler on the base
 :meth:`~hdeeprm.entrypoints.BaseWorkloadManager.BaseWorkloadManager.onJobSubmission`.
         """
 
         super().onJobSubmission(job)
         self.flow_flags['jobs_submitted'] = True
 
-    def onJobCompletion(self, job):
+    def onJobCompletion(self, job: Job) -> None:
         """Set the "jobs_completed" flag to ``True``.
 
-Further details on this handler on
+Further details on this handler on the base
 :meth:`~hdeeprm.entrypoints.BaseWorkloadManager.BaseWorkloadManager.onJobCompletion`.
         """
 

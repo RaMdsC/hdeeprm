@@ -19,7 +19,7 @@ uses PyTorch :class:`~torch.nn.Module` as a base class for defining forward pass
 Attributes:
     rewards (list):
         List of rewards populated during the interaction with the Environment. Rewards are feedback
-          on Agent's behaviour.
+        on Agent's behaviour.
     """
 
     def __init__(self) -> None:
@@ -36,7 +36,7 @@ Args:
         The Environment to be observed.
 
 Returns:
-    A NumPy :class:`numpy.ndarray` as an observation.
+    A NumPy :class:`~numpy.ndarray` as an observation.
         """
 
         return environment.observation()
@@ -125,7 +125,7 @@ Attributes:
     def decide(self, observation: np.ndarray) -> int:
         """Returns the fixed action associated to its policy pair.
 
-See :meth:`~hdeeprm.agent.Agent.decide`.
+See :meth:`hdeeprm.agent.Agent.decide`.
         """
 
         return self.action
@@ -142,8 +142,8 @@ given the decision chain is calculated, and utilized for updating the inner mode
 Attributes:
     gamma (float):
         Hyperparameter, user provided. Discount factor for rewards, inbetween [0, 1). When close to
-          1, rewards from a more distant future will be considered for updating the model and
-            viceversa.
+        1, rewards from a more distant future will be considered for updating the model and
+        viceversa.
     """
 
     def __init__(self, gamma: float) -> None:
@@ -156,8 +156,8 @@ Attributes:
 The inner model might be a neural network, which forwards the observation through its layers. The
 result is defined by the structure of last layers in the inner model, and can be defined by the
 user. Usual cases are policy learning and value learning, see
-:meth:`~hdeeprm.agent.PolicyLearningAgent.process`
-and :meth:`~hdeeprm.agent.ValueLearningAgent.process`.
+:meth:`hdeeprm.agent.PolicyLearningAgent.process`
+and :meth:`hdeeprm.agent.ValueLearningAgent.process`.
 
 Args:
     observation (:class:`~numpy.ndarray`):
@@ -309,7 +309,7 @@ For higher rewards, losses are lower.
 Args:
     rews_or_advs (list):
         List with transformed rewards or advantages (see
-          `Actor-Critic example <TODO>`_).
+        `Actor-Critic example <TODO>`_).
 
 Returns:
     List with the policy losses.
@@ -323,7 +323,7 @@ Returns:
     def save_log_prob(self, log_prob: torch.Tensor) -> None:
         """Saves a log prob in :attr:`~hdeeprm.agent.PolicyLearningAgent.log_probs`.
 
-Args
+Args:
     log_prob (:class:`~torch.Tensor`):
         Log probability for the selected action to be stored.
         """
@@ -393,8 +393,9 @@ Returns:
     def value_loss(self, rews: list) -> list:
         """Calculates the losses based on the values estimation learned.
 
-It is calculated based on Huber loss. It compares how good of an approximation the Agent has
-provided as expected future reward in comparison with the actual reward.
+It is calculated based on `Huber loss <https://en.wikipedia.org/wiki/Huber_loss>`_. It compares how
+good of an approximation the Agent has provided as expected future reward in comparison with the
+actual reward.
 
 Args:
     rews (list):
@@ -412,7 +413,7 @@ Returns:
     def save_value(self, value: torch.Tensor) -> None:
         """Saves a value in :attr:`~hdeeprm.agent.ValueLearningAgent.values`.
 
-Args
+Args:
     value (:class:`~torch.Tensor`):
         Value for the current observation to be stored.
         """

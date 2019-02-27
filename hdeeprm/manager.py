@@ -21,7 +21,7 @@ Attributes:
         Number of Jobs being served by the Platform.
     nb_completed_jobs (int):
         Number of Jobs already served by the Platform.
-    peeked_job (Job):
+    peeked_job (batsim.batsim.Job):
         Cached next Job to be processed. This saves sorting the Job Queue a second time.
     sorting_key (function):
         Key defining the Job selection policy.
@@ -57,7 +57,7 @@ Returns:
 By default, it is appended to the right end of the queue.
 
 Args:
-    job (Job):
+    job (batsim.batsim.Job):
         Incoming Job to be inserted into the Job Queue.
         """
         self.pending_jobs.append(job)
@@ -105,7 +105,7 @@ Attributes:
 State of resources change as they are being selected.
 
 Args:
-    job (Job):
+    job (batsim.batsim.Job):
         Job to be served by the selected Cores. Used for checking requirements.
     now (float):
         Current simulation time in seconds.
@@ -153,7 +153,7 @@ System until communicated to the Simulator. Modifying the state of a Core might 
 on Cores in the same Processor or Node scope due to shared resources.
 
 Args:
-    job (Job):
+    job (batsim.batsim.Job):
         Job served by the selected Cores. Used for updating resource contention.
     id_list (list):
         IDs of the Cores to be updated directly.

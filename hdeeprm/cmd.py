@@ -17,10 +17,10 @@ It takes care of creating the Platform XML file, the Workload JSON file and the 
 It also runs both Batsim and PyBatsim.
 
 Command line arguments:
-    ``agent_file`` Agent file in Python
-    ``options_file`` Options file in JSON
-    ``inmodel`` (Optional) Path to model for loading
-    ``outmodel`` (Optional) Output path for saving the new resulting model
+    | ``agent_file`` - Agent file in Python
+    | ``options_file`` - Options file in JSON
+    | ``inmodel`` - (Optional) Path to model for loading
+    | ``outmodel`` - (Optional) Output path for saving the new resulting model
     """
 
     parser = ap.ArgumentParser(description='Launches HDeepRM experiments')

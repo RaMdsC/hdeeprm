@@ -22,7 +22,7 @@ Attributes:
         It manages the Job Queue and selects pending Jobs.
     resource_manager (:class:`~hdeeprm.manager.ResourceManager`):
         Selects Cores from the Core Pool and maintains their states, including shared resource
-          conflicts.
+        conflicts.
     scheduled_step (dict):
         Statistics about number of scheduled Jobs per decision step.
     """
@@ -49,8 +49,10 @@ Attributes:
         }
 
     def onJobSubmission(self, job: Job) -> None:
-        """Handler triggered when a job has been submitted (JOB_SUBMITTED event).
+        """Handler triggered when a job has been submitted.
 
+Triggered when receiving a
+`JOB_SUBMITTED <https://batsim.readthedocs.io/en/latest/protocol.html#job-submitted>`_ event.
 Arriving Jobs are enhanced with HDeepRM parameters specified in the profile field. These are
 requested operations, requested time, memory and memory bandwidth. The requested time is estimated
 by the user, and differs from the one Batsim will use for processing the Job. The Job is sent to
@@ -68,10 +70,11 @@ Args:
         self.job_scheduler.new_job(job)
 
     def onJobCompletion(self, job: Job) -> None:
-        """Handler triggered when a job has been completed (JOB_COMPLETED event).
+        """Handler triggered when a job has been completed.
 
-When a Job is completed, its allocated Cores are freed, thus the Resource Manager updates their
-state as well as the one of Cores in the same Processor and/or Node scope.
+When a `JOB_COMPLETED <https://batsim.readthedocs.io/en/latest/protocol.html#job-completed>`_ event
+is received, the Job's allocated Cores are freed, thus the Resource Manager updates their state as
+well as the one of Cores in the same Processor and/or Node scope.
 
 Args:
     job (batsim.batsim.Job):
@@ -144,28 +147,28 @@ consumption.
         self.resource_manager.state_changes = {}
 
     def onAddResources(self, to_add):
-        pass
+        """Not used."""
 
     def onAnswerAirTemperatureAll(self, air_temperature_all):
-        pass
+        """Not used."""
 
     def onAnswerProcessorTemperatureAll(self, proc_temperature_all):
-        pass
+        """Not used."""
 
     def onJobMessage(self, timestamp, job, message):
-        pass
+        """Not used."""
 
     def onJobsKilled(self, jobs):
-        pass
+        """Not used."""
 
     def onMachinePStateChanged(self, nodeid, pstate):
-        pass
+        """Not used."""
 
     def onRemoveResources(self, to_remove):
-        pass
+        """Not used."""
 
     def onReportEnergyConsumed(self, consumed_energy):
-        pass
+        """Not used."""
 
     def onRequestedCall(self):
-        pass
+        """Not used."""

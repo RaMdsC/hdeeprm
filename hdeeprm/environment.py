@@ -17,14 +17,14 @@ taken, the Environment provides a Reward as feedback to the Agent based on its o
 Environment implementation is compliant with OpenAI gym format.
 
 Any Observation is formed by the following data fields:
-  | Fraction of available memory in each Node
-  | Fraction of available memory bandwidth in each Processor
-  | Fraction of current FLOPs and Watts with respect to the maximum values for each Core
-  | Fraction left for completing the served Job by the Core
-  | Fraction of requested resources with respect to the maximum values of requested
+  | - Fraction of available memory in each Node
+  | - Fraction of available memory bandwidth in each Processor
+  | - Fraction of current FLOPs and Watts with respect to the maximum values for each Core
+  | - Fraction left for completing the served Job by the Core
+  | - Fraction of requested resources with respect to the maximum values of requested
     time/cores/mem/mem_bw for pending Jobs; five percentiles are shown (min, Q1, med, Q3, max) such
     that the network can devise a Job distribution
-  | Variability ratio of Job Queue size with respect to last observation
+  | - Variability ratio of Job Queue size with respect to last observation
 
 The Action space is constituted by 26 possible actions, including a void action:
   +-------------------+------------------------------------------------------------------------+
@@ -46,13 +46,13 @@ The Action space is constituted by 26 possible actions, including a void action:
   +-------------------+--------+-----------------+-------------+----------------+--------------+
 
 Possible objectives for the Agent and thus rewards:
-  | Average Job Slowdown: on average, how much of the service time is due to stalling of Jobs in
+  | - Average Job Slowdown: on average, how much of the service time is due to stalling of Jobs in
     the Job Queue.
-  | Average Job Completion Time: on average, how much service time for Jobs in the Platform.
-  | Utilization: number of active Cores over the simulation time.
-  | Makespan: time span from the arrival of the absolute first Job until the completion of the
+  | - Average Job Completion Time: on average, how much service time for Jobs in the Platform.
+  | - Utilization: number of active Cores over the simulation time.
+  | - Makespan: time span from the arrival of the absolute first Job until the completion of the
     absolute last Job.
-  | Energy consumption: total amount of energy consumed during the simulation.
+  | - Energy consumption: total amount of energy consumed during the simulation.
 
 Attributes:
     workload_manager (:class:`~hdeeprm.entrypoints.HDeepRMWorkloadManager.HDeepRMWorkloadManager`):
@@ -61,16 +61,16 @@ Attributes:
         The Action space described above. See `Spaces <https://gym.openai.com/docs/#spaces>`_.
     action_keys (list):
         List of sorting key pairs indexed by action IDs. Keys are applied to the Job Scheduler and
-          the Resource Manager selections.
+        the Resource Manager selections.
     observation_space (gym.spaces.Box):
         The Observation space described above. See `Spaces <https://gym.openai.com/docs/#spaces>`_.
     reward (function):
         Mapped to a reward function depending on the Agent's objective.
     queue_sensitivity (float):
         Sensitivity of the Observation to variations in Job Queue size. If sensitivity is high,
-          larger variations will be noticed, however smaller ones will not have significant impact.
-            If sensitivity is low, smaller variations will be noticed and large ones will be
-              clipped, thus impactless.
+        larger variations will be noticed, however smaller ones will not have significant impact.
+        If sensitivity is low, smaller variations will be noticed and large ones will be clipped,
+        thus impactless.
     last_job_queue_length (int):
         Last value of the Job Queue length. Used for calculating the variation ratio.
     """
@@ -337,7 +337,7 @@ Returns:
                         in self.workload_manager.resource_manager.core_pool])
 
     def render(self, mode='human'):
-        pass
+        """Not used."""
 
     def reset(self):
-        pass
+        """Not used."""
