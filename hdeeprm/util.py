@@ -27,7 +27,6 @@ Args:
     """
 
     with open(workload_file_path, 'r') as in_f:
-        # Workload
         workload = {
             'nb_res': nb_cores,
             'jobs': [],
@@ -40,14 +39,12 @@ Args:
             if line.startswith(';'):
                 continue
             job_info = tuple(map(lambda par: int(float(par)), line.split()))
-            # Job
             job = {
                 'id': job_id,
                 'subtime': job_info[1],
                 'res': job_info[7],
                 'profile': None
             }
-            # Profile
             profile = {
                 'type': 'parallel_homogeneous',
                 'com': 0,
@@ -117,7 +114,6 @@ Args:
         If ``True``, generate the Resource Hierarchy. Defaults to ``False``.
     """
 
-    # Define shared state
     shared_state = {
         # Type of resources in the Platform
         'types': None,
@@ -213,7 +209,6 @@ def _cluster_el(root_el: dict) -> dict:
     return cluster_el
 
 def _generate_nodes(shared_state: dict, cluster_desc: dict, cluster_el: dict) -> None:
-    # Nodes
     for node_desc in cluster_desc['nodes']:
         for _ in range(node_desc['number']):
             if shared_state['gen_platform_xml']:
@@ -224,7 +219,6 @@ def _generate_nodes(shared_state: dict, cluster_desc: dict, cluster_el: dict) ->
             shared_state['counters']['node'] += 1
 
 def _node_xml(shared_state: dict, cluster_desc: dict) -> None:
-    # There is no Node XML, since Batsim only understands "compute resources", in this case Cores.
     # Create the node UP/DOWN link. SPLITDUPLEX model is utilized for simulating TCP connections
     # characteristics
     udlink_attrs = {'id': f'udl_{shared_state["counters"]["node"]}',
@@ -250,7 +244,6 @@ def _node_el(shared_state: dict, node_desc: dict, cluster_el: dict) -> dict:
     return node_el
 
 def _generate_processors(shared_state: dict, node_desc: dict, node_el: dict) -> None:
-    # Processors
     for proc_desc in shared_state['types']['node'][node_desc['type']]['processors']:
         # Computational capability per Core in FLOPs
         flops_per_core = shared_state['types']['processor'][proc_desc['type']]['clock_rate'] *\
@@ -299,7 +292,6 @@ def _proc_el(shared_state: dict, proc_desc: dict, node_el: dict, flops_per_core:
 
 def _generate_cores(shared_state: dict, flops_per_core_xml: dict, power_per_core_xml: str,
                     proc_desc: dict, proc_el: dict) -> None:
-    # Cores
     for _ in range(shared_state['types']['processor'][proc_desc['type']]['cores']):
         if shared_state['gen_platform_xml']:
             _core_xml(shared_state, flops_per_core_xml, power_per_core_xml)
@@ -319,8 +311,8 @@ def _core_xml(shared_state: dict, flops_per_core_xml: dict, power_per_core_xml: 
 
 def _core_el(shared_state: dict, proc_el: dict) -> None:
     core_el = res.Core(proc_el, shared_state['counters']['core'])
-    proc_el.node.cluster.platform.total_cores += 1
-    proc_el.local_cores.append(core_el)
+    proc_el['node']['cluster']['platform']['total_cores'] += 1
+    proc_el['local_cores'].append(core_el)
     shared_state['core_pool'].append(core_el)
 
 def _udlink_routes(shared_state: dict) -> None:

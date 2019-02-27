@@ -11,22 +11,35 @@ import numpy as np
 from hdeeprm.util import generate_workload, generate_platform
 
 def launch():
-    """
-Script for launching HDeepRM experiments. It takes care of creating the Platform, the Workload and
-running both Batsim and PyBatsim.
+    """Script for launching HDeepRM experiments.
 
-Cmd Args:
-    @1 Options file
+It takes care of creating the Platform XML file, the Workload JSON file and the Resource Hierarcy.
+It also runs both Batsim and PyBatsim.
+
+Command line arguments:
+    ``agent_file`` Agent file in Python
+    ``options_file`` Options file in JSON
+    ``inmodel`` (Optional) Path to model for loading
+    ``outmodel`` (Optional) Output path for saving the new resulting model
     """
 
     parser = ap.ArgumentParser(description='Launches HDeepRM experiments')
-    parser.add_argument('options_file_path', type=str, help='The options file path in the system')
+    parser.add_argument('agent_file', type=str, help='File with the agent for evaluation')
+    parser.add_argument('options_file', type=str, help='Options file defining the experiment')
+    parser.add_argument('-im', '--inmodel', type=str, help='Path for previous model loading')
+    parser.add_argument('-om', '--outmodel', type=str, help='Path for saving new model')
     args = parser.parse_args()
 
     # Load the options
     print('Loading options')
-    with open(args.options_file_path, 'r') as in_f:
+    with open(args.options_file, 'r') as in_f:
         options = json.load(in_f)
+        options['pybatsim']['agent']['file'] = path.abspath(args.agent_file)
+        if args.inmodel:
+            options['pybatsim']['agent']['input_model'] = path.abspath(args.inmodel)
+        if args.outmodel:
+            options['pybatsim']['agent']['output_model'] = path.abspath(args.outmodel)
+        options['pybatsim']['seed'] = options['seed']
 
     # Set the seed for random libraries
     print('Setting the random seed')

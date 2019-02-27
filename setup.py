@@ -23,7 +23,7 @@ Executes the setup and installs the HDeepRM package.
         long_description=readme,
         url=meta.URL,
         license='MIT',
-        packages=[meta.NAME],
+        packages=setuptools.find_packages(),
         classifiers=[
             'Development Status :: 4 - Beta',
             'Intended Audience :: Science/Research',

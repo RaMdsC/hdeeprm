@@ -1,109 +1,108 @@
 """
-Defines the superclass for all Workload Managers.
+A basic Workload Manager for heterogeneous Platforms.
 """
 
 import logging
 import random
 import numpy as np
-from batsim.batsim import BatsimScheduler
+from procset import ProcSet
+from batsim.batsim import BatsimScheduler, Job
 from hdeeprm.manager import JobScheduler, ResourceManager
 
 class BaseWorkloadManager(BatsimScheduler):
-    """
-    Base Workload Manager.
+    """Entrypoint for classic and non-Reinforcement Learning experimentation.
+
+It provides a Job Scheduler for Job selection and a Resource Manager for resource selection and
+state management. It handles fundamental events coming from Batsim such as Job submissions and
+Job completions, while it also orchestrates the Job to Core mapping and sends updates about Core
+states to the simulation.
+
+Attributes:
+    job_scheduler (:class:`~hdeeprm.manager.JobScheduler`):
+        It manages the Job Queue and selects pending Jobs.
+    resource_manager (:class:`~hdeeprm.manager.ResourceManager`):
+        Selects Cores from the Core Pool and maintains their states, including shared resource
+          conflicts.
+    scheduled_step (dict):
+        Statistics about number of scheduled Jobs per decision step.
     """
 
-    def __init__(self, options):
+    def __init__(self, options: dict) -> None:
         super().__init__(options)
+        # Reference to Batsim proxy, populated dynamically
         self.bs = None
-        # Seed the PRNGs of the libraries
-        self.seed = int(options['seed'])
-        self.set_seed()
-        # Job scheduler and resource manager
-        self.job_scheduler = JobScheduler()
-        self.resource_manager = ResourceManager()
-        # Create the logger
+        # Set random seed for reproducibility
+        seed = int(options['seed'])
+        random.seed(seed)
+        np.random.seed(seed)
+        # Setup logging
         for handler in logging.root.handlers[:]:
             logging.root.removeHandler(handler)
         logging.basicConfig(filename='insights.log', level=getattr(logging, options['log_level']))
-        # Stats about jobs scheduled every decision step
-        self.scheduled_step = {}
-        self.scheduled_step['max'] = None
-        self.scheduled_step['min'] = None
-        self.scheduled_step['total'] = 0
-        self.scheduled_step['num_steps'] = 0
+        self.job_scheduler = JobScheduler()
+        self.resource_manager = ResourceManager()
+        self.scheduled_step = {
+            'max': None,
+            'min': None,
+            'total': 0,
+            'num_steps': 0
+        }
 
-    def onJobSubmission(self, job):
-        # Enhance the job with requested ops and memory information
-        # This is the user estimated ops and time for running. It differs from
-        # the actual running time in the Batsim profile. The job scheduler
-        # uses it to make decisions
-        logging.info('Job submitted')
+    def onJobSubmission(self, job: Job) -> None:
+        """Handler triggered when a job has been submitted (JOB_SUBMITTED event).
+
+Arriving Jobs are enhanced with HDeepRM parameters specified in the profile field. These are
+requested operations, requested time, memory and memory bandwidth. The requested time is estimated
+by the user, and differs from the one Batsim will use for processing the Job. The Job is sent to
+the Job Scheduler for waiting in the Job Queue.
+
+Args:
+    job (batsim.batsim.Job):
+        The arriving Job.
+        """
+
         job.req_ops = self.bs.profiles[job.workload][job.profile]['req_ops']
         job.req_time = self.bs.profiles[job.workload][job.profile]['req_time']
         job.mem = self.bs.profiles[job.workload][job.profile]['mem']
         job.mem_bw = self.bs.profiles[job.workload][job.profile]['mem_bw']
         self.job_scheduler.new_job(job)
 
-    def onJobCompletion(self, job):
-        # Update the individual states of each newly available core
-        logging.info('Job completed')
-        logging.debug('Res FLOPS %s', [self.resource_manager.core_pool[alloc_id].current_flops\
-                                       for alloc_id in job.allocation])
-        self.resource_manager.state_changes = {**self.resource_manager.state_changes,
-                                               **self.resource_manager.update_state(job,
-                                                                                    list(job.allocation),
-                                                                                    'FREE',
-                                                                                    self.bs.time())}
+    def onJobCompletion(self, job: Job) -> None:
+        """Handler triggered when a job has been completed (JOB_COMPLETED event).
+
+When a Job is completed, its allocated Cores are freed, thus the Resource Manager updates their
+state as well as the one of Cores in the same Processor and/or Node scope.
+
+Args:
+    job (batsim.batsim.Job):
+        The completed Job.
+        """
+
+        self.resource_manager.state_changes = {
+            **self.resource_manager.state_changes,
+            **self.resource_manager.update_state(job, list(job.allocation), 'FREE', self.bs.time())
+        }
         self.job_scheduler.nb_active_jobs -= 1
         self.job_scheduler.nb_completed_jobs += 1
 
-    def onJobMessage(self, timestamp, job, message):
-        pass
+    def onNoMoreEvents(self) -> None:
+        """Handler triggered when there are no more events for the time step.
 
-    def onJobsKilled(self, jobs):
-        pass
+If there are no more events, it means all Jobs have arrived and completed, and thus they have been
+handled. The Workload Manager proceeds to schedule the Jobs and send Batsim the resource state
+changes.
+        """
 
-    def onMachinePStateChanged(self, nodeid, pstate):
-        pass
-
-    def onReportEnergyConsumed(self, consumed_energy):
-        pass
-
-    def onAnswerProcessorTemperatureAll(self, proc_temperature_all):
-        pass
-
-    def onAnswerAirTemperatureAll(self, air_temperature_all):
-        pass
-
-    def onAddResources(self, to_add):
-        pass
-
-    def onRemoveResources(self, to_remove):
-        pass
-
-    def onRequestedCall(self):
-        pass
-
-    def onNoMoreEvents(self):
-        # All events in Batsim message have been processed
         if self.bs.running_simulation:
             self.schedule_jobs()
             self.change_resource_states()
 
-    def set_seed(self):
-        """
-        Sets the random seed for reproducibility.
-        """
+    def schedule_jobs(self) -> None:
+        """Maps pending Jobs into available resources.
 
-        random.seed(self.seed)
-        np.random.seed(self.seed)
-
-    def schedule_jobs(self):
-        """
-        Select jobs for scheduling.
-        Looks for the first selected job from the queue and allocates
-        resources. Does this until no resources are available for next job.
+Looks for the first selected Job from the Job Queue given the Job selection policy, and allocates
+Cores given the Job requirements and the Core selection policy. Jobs are scheduled until no more
+pending Jobs or no more resources available for the next selected.
         """
 
         scheduled_jobs = []
@@ -118,7 +117,6 @@ class BaseWorkloadManager(BatsimScheduler):
                 job.allocation = resources
                 scheduled_jobs.append(job)
                 self.job_scheduler.remove_job()
-
         # Execute the jobs if they exist
         if scheduled_jobs:
             # Update scheduled per step metrics
@@ -129,18 +127,45 @@ class BaseWorkloadManager(BatsimScheduler):
             self.scheduled_step['total'] += len(scheduled_jobs)
             self.scheduled_step['num_steps'] += 1
             self.job_scheduler.nb_active_jobs += len(scheduled_jobs)
-            for scheduled_job in scheduled_jobs:
-                logging.debug('Scheduled %s', scheduled_job)
             self.bs.execute_jobs(scheduled_jobs)
 
-    def change_resource_states(self):
-        """
-        Send resource state changes to Batsim.
-        This affects speed and power consumption in the simulation.
+    def change_resource_states(self) -> None:
+        """Sends resource state changes to Batsim.
+
+This alters the Cores P-states in the simulation, thus affecting computational capability and power
+consumption.
         """
 
         for pstate in (0, 1, 2, 3):
             resources = [i for i, s in self.resource_manager.state_changes.items() if s == pstate]
             if resources:
-                self.bs.set_resource_state(resources, pstate)
+                self.bs.set_resource_state(ProcSet(*resources), pstate)
+        # Reset for next decision step
         self.resource_manager.state_changes = {}
+
+    def onAddResources(self, to_add):
+        pass
+
+    def onAnswerAirTemperatureAll(self, air_temperature_all):
+        pass
+
+    def onAnswerProcessorTemperatureAll(self, proc_temperature_all):
+        pass
+
+    def onJobMessage(self, timestamp, job, message):
+        pass
+
+    def onJobsKilled(self, jobs):
+        pass
+
+    def onMachinePStateChanged(self, nodeid, pstate):
+        pass
+
+    def onRemoveResources(self, to_remove):
+        pass
+
+    def onReportEnergyConsumed(self, consumed_energy):
+        pass
+
+    def onRequestedCall(self):
+        pass

@@ -54,7 +54,7 @@ Attributes:
       | pstate (:class:`int`) - P-state for the Core.
       | current_flops (:class:`float`) - Current computing capability in FLOPs.
       | current_power (:class:`float`) - Current power consumption in Watts.
-      | served_job (Job) - Job being served by the Core.
+      | served_job (batim.batsim.Job) - Job being served by the Core.
     """
 
     def __init__(self, processor: dict, bs_id: int) -> None:
@@ -81,7 +81,7 @@ Args:
         New P-state for the Core.
     now (float):
         Current simulation time in seconds.
-    new_served_job (Job):
+    new_served_job (batsim.batsim.Job):
         Reference to the Job now being served by the Core. Defaults to None.
         """
 
@@ -94,7 +94,6 @@ Args:
                 self.processor['current_mem_bw'] -= new_served_job.mem_bw
                 self.processor['node']['current_mem'] -= new_served_job.mem
             else:
-                # Update the completion state
                 self.update_completion(now)
             # 100% Power
             self.state['current_power'] = self.processor['power_per_core']

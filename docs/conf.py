@@ -177,5 +177,6 @@ autodoc_mock_imports = ['torch']
 intersphinx_mapping = {
     'python': ('https://docs.python.org/3/', None),
     'numpy': ('https://docs.scipy.org/doc/numpy/', None),
-    'procset': ('https://procset.readthedocs.io/en/stable/', None)
+    'procset': ('https://procset.readthedocs.io/en/stable/', None),
+    'pytorch': ('https://pytorch.org/docs/stable/', None)
 }

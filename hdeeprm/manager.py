@@ -94,11 +94,9 @@ Attributes:
     """
 
     def __init__(self) -> None:
-        # Store the PState changes for the Cores
         self.state_changes = {}
         with open('./res_hierarchy.pkl', 'rb') as in_f:
             self.platform, self.core_pool = pickle.load(in_f)
-        # Used for sorting the Cores
         self.sorting_key = None
 
     def get_resources(self, job: Job, now: float) -> ProcSet:
