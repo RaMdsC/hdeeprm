@@ -13,6 +13,19 @@
       "2.3":"Expressed in Gigabytes (GB)"
     }
   },
+  "Example":{
+    "id":"example",
+    "processors":[
+      {
+        "type":"Example",
+        "number":1
+      }
+    ],
+    "memory":{
+      "type":"DDR3-1600",
+      "capacity":16
+    }
+  },
   "Basic":{
     "id":"basic",
     "processors":[

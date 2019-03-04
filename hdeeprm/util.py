@@ -15,7 +15,7 @@ def generate_workload(workload_file_path: str, nb_cores: int, nb_jobs: int) -> N
     """SWF-formatted Workload -> Batsim-ready JSON format.
 
 Parses a SWF formatted Workload file into a Batsim-ready JSON file. Generates as many jobs as
-specified in "nb_jobs".
+specified in "nb_jobs". It also generates the job resource requirement limits from the Workload.
 
 Args:
     workload_file_path (str):
@@ -26,6 +26,10 @@ Args:
         Total number of jobs for the generated Workload.
     """
 
+    # Load the reference speed for operations calculation
+    with open('./res_hierarchy.pkl', 'rb') as in_f:
+        reference_speed = pickle.load(in_f)[0]['reference_speed']
+
     with open(workload_file_path, 'r') as in_f:
         workload = {
             'nb_res': nb_cores,
@@ -34,7 +38,11 @@ Args:
         }
         # Read each Job from the SWF file and parse the fields
         min_submit_time = None
-        for job_id, line in zip(range(nb_jobs), in_f):
+        job_id = 0
+        for line in in_f:
+            # End if total number of jobs has been reached
+            if job_id == nb_jobs:
+                break
             # Skip comments
             if line.startswith(';'):
                 continue
@@ -71,13 +79,12 @@ Args:
                 min_submit_time = job['subtime']
             job['subtime'] -= min_submit_time
             # Calculate FLOPs per core. The original trace provides time per core, here it
-            # is normalized to FLOPs with respect to a 2.75 GHz 8-wide vector CPU (reference
-            # machine, 22e9 ops/s)
-            profile['req_ops'] = int(22e9 * profile['req_time'])
+            # is normalized to FLOPs with respect to the reference speed calculated previously.
+            profile['req_ops'] = int(reference_speed * profile['req_time'])
             # User estimates in Job requested time have been shown to be generally overestimated.
             # The distribution here used is taken as an approximation to that shown in
             # [Tsafrir et al. 2007]
-            profile['cpu'] = int(22e9 * nprnd.choice(
+            profile['cpu'] = int(reference_speed * nprnd.choice(
                 numpy.arange(0.05, 1.3, 0.05),
                 p=numpy.array([0.15, 0.09, 0.07] + 5 * [0.04] + 5 *\
                             [0.03] + 10 * [0.02] + [0.06, 0.08])
@@ -93,9 +100,23 @@ Args:
             job['profile'] = f'{profile["req_time"]}_{profile["mem"]}_{profile["mem_bw"]}'
             workload['profiles'].setdefault(job['profile'], profile)
             workload['jobs'].append(job)
+            job_id += 1
     # Write the data structure into the JSON output
     with open('workload.json', 'w') as out_f:
         json.dump(workload, out_f)
+    # Pickle the job limits from the Workload
+    job_limits = {
+        'max_time': numpy.percentile(numpy.array(
+            [workload['profiles'][job['profile']]['req_time'] for job in workload['jobs']]), 99),
+        'max_core': numpy.percentile(numpy.array(
+            [job['res'] for job in workload['jobs']]), 99),
+        'max_mem': numpy.percentile(numpy.array(
+            [workload['profiles'][job['profile']]['mem'] for job in workload['jobs']]), 99),
+        'max_mem_bw': numpy.percentile(numpy.array(
+            [workload['profiles'][job['profile']]['mem_bw'] for job in workload['jobs']]), 99)
+    }
+    with open('job_limits.pkl', 'wb') as out_f:
+        pickle.dump(job_limits, out_f)
 
 def generate_platform(platform_file_path: str, gen_platform_xml: bool = True,
                       gen_res_hierarchy: bool = False) -> None:
@@ -131,7 +152,7 @@ Args:
     if shared_state['gen_platform_xml']:
         root_xml, main_zone_xml = _root_xml()
     if shared_state['gen_res_hierarchy']:
-        root_el = _root_el(root_desc)
+        root_el = _root_el()
     _generate_clusters(shared_state, root_desc, root_el, main_zone_xml)
     if shared_state['gen_platform_xml']:
         _global_links(shared_state, root_desc, main_zone_xml)
@@ -164,17 +185,12 @@ def _root_xml() -> tuple:
         'prop', attrib={'id': 'watt_per_state', 'value': '0.0:0.0'})
     return root_xml, main_zone_xml
 
-def _root_el(root_desc: dict) -> dict:
+def _root_el() -> dict:
     # Resource hierarchy starts on the Platform element
     return {
         'total_nodes': 0,
         'total_processors': 0,
         'total_cores': 0,
-        # Maximum ReqTime, ReqCore, ReqMem and ReqMemBW per Job in the Platform.
-        'job_limits': root_desc['job_limits'],
-        # Based on 2.75 GHz 8-wide vector machine
-        'reference_speed': root_desc['job_limits']['reference_machine']['clock_rate'] *\
-                           root_desc['job_limits']['reference_machine']['dpflop_vector_width'],
         'clusters': []
     }
 
@@ -246,35 +262,36 @@ def _node_el(shared_state: dict, node_desc: dict, cluster_el: dict) -> dict:
 def _generate_processors(shared_state: dict, node_desc: dict, node_el: dict) -> None:
     for proc_desc in shared_state['types']['node'][node_desc['type']]['processors']:
         # Computational capability per Core in FLOPs
-        flops_per_core = shared_state['types']['processor'][proc_desc['type']]['clock_rate'] *\
+        gflops_per_core = shared_state['types']['processor'][proc_desc['type']]['clock_rate'] *\
                          shared_state['types']['processor'][proc_desc['type']]['dpflops_per_cycle']
         # Power consumption per Core in Watts
         power_per_core = shared_state['types']['processor'][proc_desc['type']]['power'] /\
                          shared_state['types']['processor'][proc_desc['type']]['cores']
         if shared_state['gen_platform_xml']:
-            flops_per_core_xml, power_per_core_xml = _proc_xml(flops_per_core, power_per_core)
+            gflops_per_core_xml, power_per_core_xml = _proc_xml(gflops_per_core, power_per_core)
         for _ in range(proc_desc['number']):
             if shared_state['gen_res_hierarchy']:
-                proc_el = _proc_el(shared_state, proc_desc, node_el, flops_per_core, power_per_core)
-            _generate_cores(shared_state, flops_per_core_xml, power_per_core_xml, proc_desc,
+                proc_el = _proc_el(shared_state, proc_desc, node_el, gflops_per_core,
+                                   power_per_core)
+            _generate_cores(shared_state, gflops_per_core_xml, power_per_core_xml, proc_desc,
                             proc_el)
 
-def _proc_xml(flops_per_core: float, power_per_core: float) -> tuple:
+def _proc_xml(gflops_per_core: float, power_per_core: float) -> tuple:
     # For each processor several P-states are defined based on the utilization
     # P0 - 100% FLOPS - 100% Power / core - Job scheduled on the core
     # P1 - 75% FLOPS - 100% Power / core - Job scheduled on the core but constraint by memory BW
     # P2 - 0% FLOPS - 15% Power / core - Job not scheduled but other job in same processor cores
     # P3 - 0% FLOPS - 5% Power / core - Processor idle
     # These are further associated to each individual core
-    flops_per_core_xml = {'speed': (f'{flops_per_core:.3f}Gf, {0.75 * flops_per_core:.3f}Gf, '
-                                    f'{0.001:.3f}f, {0.001:.3f}f')}
+    gflops_per_core_xml = {'speed': (f'{gflops_per_core:.3f}Gf, {0.75 * gflops_per_core:.3f}Gf, '
+                                     f'{0.001:.3f}f, {0.001:.3f}f')}
     power_per_core_xml = (f'{power_per_core:.3f}:{power_per_core:.3f}, '
                           f'{power_per_core:.3f}:{power_per_core:.3f}, '
                           f'{0.15 * power_per_core:.3f}:{0.15 * power_per_core:.3f}, '
                           f'{0.05 * power_per_core:.3f}:{0.05 * power_per_core:.3f}')
-    return flops_per_core_xml, power_per_core_xml
+    return gflops_per_core_xml, power_per_core_xml
 
-def _proc_el(shared_state: dict, proc_desc: dict, node_el: dict, flops_per_core: float,
+def _proc_el(shared_state: dict, proc_desc: dict, node_el: dict, gflops_per_core: float,
              power_per_core: float) -> dict:
     max_mem_bw = shared_state['types']['processor'][proc_desc['type']]['mem_bw']
     proc_el = {
@@ -282,7 +299,7 @@ def _proc_el(shared_state: dict, proc_desc: dict, node_el: dict, flops_per_core:
         # Memory bandwidth is tracked at Processor-level
         'max_mem_bw': max_mem_bw,
         'current_mem_bw': max_mem_bw,
-        'flops_per_core': flops_per_core,
+        'flops_per_core': gflops_per_core * 1e9,
         'power_per_core': power_per_core,
         'local_cores': []
     }
@@ -290,19 +307,19 @@ def _proc_el(shared_state: dict, proc_desc: dict, node_el: dict, flops_per_core:
     node_el['local_processors'].append(proc_el)
     return proc_el
 
-def _generate_cores(shared_state: dict, flops_per_core_xml: dict, power_per_core_xml: str,
+def _generate_cores(shared_state: dict, gflops_per_core_xml: dict, power_per_core_xml: str,
                     proc_desc: dict, proc_el: dict) -> None:
     for _ in range(shared_state['types']['processor'][proc_desc['type']]['cores']):
         if shared_state['gen_platform_xml']:
-            _core_xml(shared_state, flops_per_core_xml, power_per_core_xml)
+            _core_xml(shared_state, gflops_per_core_xml, power_per_core_xml)
         if shared_state['gen_res_hierarchy']:
             _core_el(shared_state, proc_el)
         shared_state['counters']['core'] += 1
 
-def _core_xml(shared_state: dict, flops_per_core_xml: dict, power_per_core_xml: str) -> None:
+def _core_xml(shared_state: dict, gflops_per_core_xml: dict, power_per_core_xml: str) -> None:
     # Create the Core XML element and associate power properties
     core_attrs = {'id': f'cor_{shared_state["counters"]["core"]}', 'pstate': '3'}
-    core_attrs.update(flops_per_core_xml)
+    core_attrs.update(gflops_per_core_xml)
     exml.SubElement(exml.SubElement(shared_state['cluster_xml'], 'host', attrib=core_attrs),
                     'prop', attrib={'id': 'watt_per_state', 'value': power_per_core_xml})
     # Append the up / down route parameters for generating after all the Cores
@@ -371,6 +388,10 @@ def _write_platform_definition(root_xml: XMLElement) -> None:
                                                                  encoding='utf-8').decode())
 
 def _write_resource_hierarchy(shared_state: dict, root_el: dict) -> None:
-    # Pickle the Platform hierarchy and Core pool
+    # Pickle the resource hierarchy and core pool
     with open('res_hierarchy.pkl', 'wb') as out_f:
+        # Add the reference speed to the resource hierarchy
+        root_el['reference_speed'] = numpy.mean(numpy.array(
+            [core.processor['flops_per_core'] for core in shared_state['core_pool']]))
+        root_el['reference_speed'] = 22e9
         pickle.dump((root_el, shared_state['core_pool']), out_f)

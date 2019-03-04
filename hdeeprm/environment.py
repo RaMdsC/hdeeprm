@@ -264,36 +264,37 @@ Args:
     def avg_job_slowdown_reward(self) -> float:
         """Reward when the objetive is to minimize average job slowdown.
 
-It is the mean of requested times for all jobs currently in the system. Higher means when longest
-jobs in the queue, which indicates that shorter jobs are being scheduled, and thus average job
-slowdown is kept low.
+It is the negative inverse summation of requested times. If the agent is prioritizing short jobs,
+slowdowns will also go down, because the working set of jobs will do too.
 
 Returns:
-    Mean of requested times for all jobs in the system.
+    Negative inverse summation of requested times of all jobs active in the system.
         """
 
         pending_jobs_req_time = [
             job.req_time for job in self.workload_manager.job_scheduler.pending_jobs
         ]
-        active_jobs_req_time = [
-            core.state['served_job'].req_time for core\
-            in self.workload_manager.resource_manager.core_pool if core.state['served_job']
-        ]
+        active_jobs = set(core.state['served_job'] for core\
+                          in self.workload_manager.resource_manager.core_pool\
+                          if core.state['served_job'])
+        active_jobs_req_time = [job.req_time for job in active_jobs]
         all_jobs_req_time = np.array([*pending_jobs_req_time, *active_jobs_req_time])
         if not all_jobs_req_time:
             return 0.0
-        return np.mean(all_jobs_req_time)
+        return np.sum(- 1.0 / all_jobs_req_time)
 
     def avg_job_completion_reward(self) -> float:
         """Reward when the objective is to minimize average job completion time.
 
-It is the number of completed jobs, as more jobs being completed implies shorter completion times.
+It is the negative the number of unfinished jobs in the system. As more jobs are completed, the
+reward will be higher.
 
 Returns:
-    Number of completed jobs.
+    Negative number of unfinished jobs in the system.
         """
 
-        return self.workload_manager.job_scheduler.nb_completed_jobs
+        return - (self.workload_manager.job_scheduler.nb_pending_jobs\
+                  + self.workload_manager.job_scheduler.nb_active_jobs)
 
     def avg_utilization_reward(self) -> float:
         """Reward when the objective is to maximize average utilization.
@@ -326,15 +327,15 @@ Returns:
     def energy_consumption_reward(self) -> float:
         """Reward when the objective is to minimize total energy consumption.
 
-It is the inverse of the current power usage in the data centre. Keeping the power low will decrease
+It is negative the of current power usage in the data centre. Keeping the power low will decrease
 total energy consumed.
 
 Returns:
-    Inverse the power usage in the data centre service.
+    Negative the power usage in the data centre service.
         """
 
-        return 1 / sum([core.state['current_power'] for core\
-                        in self.workload_manager.resource_manager.core_pool])
+        return - sum([core.state['current_power'] for core\
+                      in self.workload_manager.resource_manager.core_pool])
 
     def render(self, mode='human'):
         """Not used."""

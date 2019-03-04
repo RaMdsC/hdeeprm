@@ -135,7 +135,7 @@ Args:
         self.state['served_job'].remaining_ops -= self.state['current_flops'] * time_delta
         self.state['served_job'].last_update = now
 
-    def get_remaining_per(self) -> None:
+    def get_remaining_per(self) -> float:
         """Provides the remaining percentage of the Job being served.
 
 Calculated by dividing the remaining operations by the total requested on arrival.

@@ -97,6 +97,9 @@ Attributes:
         self.state_changes = {}
         with open('./res_hierarchy.pkl', 'rb') as in_f:
             self.platform, self.core_pool = pickle.load(in_f)
+        # Add the job resource requirement limits to the resource hierarchy
+        with open('./job_limits.pkl', 'rb') as in_f:
+            self.platform['job_limits'] = pickle.load(in_f)
         self.sorting_key = None
 
     def get_resources(self, job: Job, now: float) -> ProcSet:

@@ -87,12 +87,15 @@ Reinforcement Learning agents being developed. May implement any of the policy p
 Space.
 
 Attributes:
+    atype (str):
+        Agent type identification.
     action (int):
         Fixed Action ID for always selecting the same Environment interaction.
     """
 
     def __init__(self, policy_pair: str) -> None:
         super(ClassicAgent, self).__init__()
+        self.atype = 'CLASSIC'
         policy_pair_to_action = {
             'random-random': 0,
             'random-high_flops': 1,
@@ -140,6 +143,8 @@ A generic learning Agent processes observations through its inner model. At the 
 given the decision chain is calculated, and utilized for updating the inner model parameters.
 
 Attributes:
+    atype (str):
+        Agent type identification.
     gamma (float):
         Hyperparameter, user provided. Discount factor for rewards, inbetween [0, 1). When close to
         1, rewards from a more distant future will be considered for updating the model and
@@ -148,6 +153,7 @@ Attributes:
 
     def __init__(self, gamma: float) -> None:
         super(LearningAgent, self).__init__()
+        self.atype = 'LEARNING'
         self.gamma = gamma
 
     def process(self, observation: np.ndarray) -> typing.Any:
@@ -361,7 +367,7 @@ Returns:
         observation = torch.from_numpy(observation).float().unsqueeze(0)
         return self.forward_value(observation)
 
-    def loss(self):
+    def loss(self) -> float:
         """Calculates the loss for the Value Learning Agent.
 
 First it transforms the rewards, which result from the Agent's behaviour during the simulation. It

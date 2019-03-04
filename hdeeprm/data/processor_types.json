@@ -20,6 +20,17 @@
     "18":"This parameter depends on the vector extensions of the processor",
     "19":"More information on: https://en.wikipedia.org/wiki/FLOPS#FLOPs_per_cycle_for_various_processors"
   },
+  "Example":{
+    "uarch":"Example",
+    "id":"example",
+    "type":"CPU",
+    "cores":2,
+    "clock_rate":2.5,
+    "mem_bw":24,
+    "llc_size":8,
+    "power":75,
+    "dpflops_per_cycle":4
+  },
   "Basic":{
     "uarch":"Basic",
     "id":"basic",

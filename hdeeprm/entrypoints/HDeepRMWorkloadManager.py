@@ -10,7 +10,7 @@ import os.path as path
 import numpy as np
 import torch
 from batsim.batsim import Job
-from hdeeprm.agent import Agent, ClassicAgent, LearningAgent
+from hdeeprm.agent import Agent, ClassicAgent
 from hdeeprm.entrypoints.BaseWorkloadManager import BaseWorkloadManager
 from hdeeprm.environment import HDeepRMEnv
 
@@ -68,37 +68,36 @@ Returns:
     A tuple with the created Agent and the optimizer in case of training.
         """
 
-        # Obtain the agent class
-        agent_module_name = path.splitext(path.basename(agent_options['file']))[0]
-        spec = iutil.spec_from_file_location(agent_module_name, agent_options['file'])
-        agent_module = iutil.module_from_spec(spec)
-        spec.loader.exec_module(agent_module)
-        agent_class = [cl for na, cl in inspect.getmembers(agent_module, inspect.isclass)
-                       if getattr(cl, '__module__', None) == agent_module_name
-                       and issubclass(cl, Agent)][0]
-        # Pass options depending on the superclass
-        if issubclass(agent_class, ClassicAgent):
-            agent = agent_class(agent_options['policy_pair'])
-        elif issubclass(agent_class, LearningAgent):
+        optimizer = None
+        if agent_options['type'] == 'CLASSIC':
+            agent = ClassicAgent(agent_options['policy_pair'])
+        elif agent_options['type'] == 'LEARNING':
+            # Obtain the agent class
+            agent_module_name = path.splitext(path.basename(agent_options['file']))[0]
+            spec = iutil.spec_from_file_location(agent_module_name, agent_options['file'])
+            agent_module = iutil.module_from_spec(spec)
+            spec.loader.exec_module(agent_module)
+            agent_class = [cl for na, cl in inspect.getmembers(agent_module, inspect.isclass)
+                           if getattr(cl, '__module__', None) == agent_module_name
+                           and issubclass(cl, Agent)][0]
             agent = agent_class(float(agent_options['gamma']), int(agent_options['hidden']),
                                 self.env.action_size, self.env.observation_size)
+            # Load previously trained model if the user indicated as option
+            if 'input_model' in agent_options:
+                agent.load_state_dict(torch.load(agent_options['input_model']))
+            # Create the optimizer if this is a training run
+            if agent_options['run'] == 'train':
+                optimizer = torch.optim.Adam(agent.parameters(), lr=float(agent_options['lr']))
+            # If not, seed torch for reproducibility
+            else:
+                torch.random.manual_seed(seed)
         else:
-            raise TypeError('Unrecognized agent superclass')
-        # Load previously trained model if the user indicated as option
-        if 'input_model' in agent_options:
-            agent.load_state_dict(torch.load(agent_options['input_model']))
-        # Create the optimizer if this is a training run
-        optimizer = None
-        if agent_options['run'] == 'train':
-            optimizer = torch.optim.Adam(agent.parameters(), lr=float(agent_options['lr']))
-        # If not, seed torch for reproducibility
-        else:
-            torch.random.manual_seed(seed)
+            raise TypeError('Unrecognized agent type')
         return agent, optimizer
 
     def onSimulationEnds(self) -> None:
         """Handler triggered when the simulation has ended.
-        
+
 Triggered when receiving a
 `SIMULATION_ENDS <https://batsim.readthedocs.io/en/latest/protocol.html#simulation-ends>`_ event.
 If the Agent evaluated has been in training mode, the loss is calculated to update its inner model
@@ -106,7 +105,7 @@ weights. The updated model is saved if the user has indicated so in command line
 logged for observing performance.
         """
 
-        if self.options['agent']['run'] == 'train':
+        if self.options['agent']['type'] == 'LEARNING' and self.options['agent']['run'] == 'train':
             loss = self.agent.loss()
             # Update parameters
             self.optimizer.zero_grad()
