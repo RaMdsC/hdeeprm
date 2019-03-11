@@ -1,6 +1,13 @@
 Changelog
 =========
 
+`0.2.1b0 <https://github.com/RaMdsC/hdeeprm/tree/0.2.0b1>`__ (11-03-2019)
+-------------------------------------------------------------------------
+
+- New *hdeeprm-metrics* utility for plotting a grid comparing metrics
+  from two different simulation runs.
+- Renamed *hdeeprm-stat* to *hdeeprm-visual*.
+
 `0.2.0b1 <https://github.com/RaMdsC/hdeeprm/tree/0.2.0b1>`__ (11-03-2019)
 -------------------------------------------------------------------------
 

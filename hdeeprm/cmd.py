@@ -3,6 +3,7 @@ Command line scripts for managing HDeepRM experiments.
 """
 
 import argparse as ap
+import csv
 import json
 import os
 import os.path as path
@@ -13,6 +14,7 @@ import evalys.visu.gantt as evg
 import evalys.visu.lifecycle as evl
 import evalys.visu.series as evs
 import matplotlib.pyplot as plt
+import matplotlib.ticker as mtick
 import numpy as np
 from hdeeprm.util import generate_workload, generate_platform
 
@@ -105,7 +107,7 @@ Command line arguments:
         sp.run(('batsim', '-E', '-w', 'workload.json', '-p', 'platform.xml'), check=True)
         pybs.communicate()
 
-def stat() -> None:
+def visual() -> None:
     """Script for analysing stats from HDeepRM outcomes.
 
 It utilizes `Evalys <https://gitlab.inria.fr/batsim/evalys>`_ for plotting useful information from
@@ -140,15 +142,63 @@ Command line arguments:
     jobset = ejs.JobSet.from_csv('./out_jobs.csv', resource_bounds=(0, options['nb_resources']))
     if args.stat == 'queue_size':
         evs.plot_series(jobset, name='queue', title=f'Queue size over time for {title}')
+        plt.ylabel('Pending jobs')
     elif args.stat == 'utilization':
         evs.plot_series(jobset, name='utilization', title=f'Utilization over time for {title}')
+        plt.ylabel('Active cores')
     elif args.stat == 'lifecycle':
         evl.plot_lifecycle(jobset, title=f'Job lifecycle for {title}')
     elif args.stat == 'gantt':
         evg.plot_gantt(jobset, title=f'Gantt chart for {title}')
+        plt.ylabel('Cores')
     elif args.stat == 'gantt_no_label':
         evg.plot_gantt(jobset, title=f'Gantt chart for {title}', labeler=lambda _: '')
+        plt.ylabel('Cores')
 
+    plt.xlabel('Simulation time')
+    if args.save:
+        plt.savefig(args.save)
+    plt.show()
+
+def metrics() -> None:
+    """Script for comparing metrics between simulation runs.
+
+Plots a grid with different metrics resulting from *out_schedule.csv*.
+
+Command line arguments:
+    | ``res1`` - *out_schedule.csv* file from run 1.
+      ``res2`` - *out_schedule.csv* file from run 2.
+    """
+
+    parser = ap.ArgumentParser(description='Compares metrics between simulation runs')
+    parser.add_argument('res1', type=str, help='out_schedule.csv file from run 1')
+    parser.add_argument('res2', type=str, help='out_schedule.csv file from run 2')
+    parser.add_argument('-s', '--save', type=str, help='Save the plot in the specified file path')
+    args = parser.parse_args()
+
+    with open(args.res1, 'r') as res1_f,\
+         open(args.res2, 'r') as res2_f:
+        res1_reader = csv.reader(res1_f, delimiter=',')
+        res2_reader = csv.reader(res2_f, delimiter=',')
+        names, res1_metrics = [row for row in res1_reader]
+        _, res2_metrics = [row for row in res2_reader]
+    _, axes = plt.subplots(nrows=2, ncols=4, constrained_layout=True)
+    for i, row in enumerate(axes):
+        for j, col in enumerate(row):
+            metric1 = float(res1_metrics[i * 4 + j + 1])
+            metric2 = float(res2_metrics[i * 4 + j + 1])
+            bars = col.bar((1, 2), (metric1, metric2), color=('green', 'blue'),
+                           edgecolor='black')
+            col.set_xticks((1, 2))
+            col.set_xticklabels(('A1', 'A2'))
+            col.set_ylim(0, max(1.0, 1.15 * max(metric1, metric2)))
+            col.yaxis.set_major_formatter(mtick.ScalarFormatter())
+            col.ticklabel_format(axis='y', style='sci', scilimits=(0, 3))
+            for rect in bars:
+                height = rect.get_height()
+                col.text(rect.get_x() + rect.get_width() / 2.0, height,
+                         '%d' % int(height), ha='center', va='bottom')
+            col.set_title(names[i * 4 + j + 1])
     if args.save:
         plt.savefig(args.save)
     plt.show()

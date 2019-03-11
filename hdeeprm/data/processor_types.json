@@ -125,7 +125,7 @@
     "type":"CPU",
     "cores":10,
     "clock_rate":2,
-    "mem_bw":32,
+    "mem_bw":51.2,
     "llc_size":24,
     "power":97.5,
     "dpflops_per_cycle":4
