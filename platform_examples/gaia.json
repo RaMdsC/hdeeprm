@@ -1,0 +1,53 @@
+{
+  "clusters":[
+    {
+      "id":"gaia_cluster",
+      "nodes":[
+        {
+          "type":"Bullx B500-0",
+          "number":60
+        },
+        {
+          "type":"Bullx B505-0",
+          "number":2
+        },
+        {
+          "type":"Bullx B505-1",
+          "number":10
+        },
+        {
+          "type":"Bullx S6030",
+          "number":1
+        },
+        {
+          "type":"Dell R820",
+          "number":1
+        },
+        {
+          "type":"Dell R720",
+          "number":5
+        },
+        {
+          "type":"Bullx B500-1",
+          "number":72
+        },
+        {
+          "type":"Delta D88x-M8-BI",
+          "number":1
+        },
+        {
+          "type":"SGI UV-2000",
+          "number":1
+        }
+      ],
+      "local_links":{
+        "type":"InfiniBand QDR",
+        "latency":"0us"
+      }
+    }
+  ],
+  "global_links":{
+    "type":"InfiniBand QDR",
+    "latency":"0us"
+  }
+}

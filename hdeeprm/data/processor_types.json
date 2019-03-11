@@ -86,6 +86,17 @@
     "power":100,
     "dpflops_per_cycle":4
   },
+  "Pentium III":{
+    "uarch":"P6",
+    "id":"pentium_iii",
+    "type":"CPU",
+    "cores":2,
+    "clock_rate":1.0,
+    "mem_bw":32,
+    "llc_size":1,
+    "power":29,
+    "dpflops_per_cycle":1
+  },
   "Xeon L5640":{
     "uarch":"Westmere-EP",
     "id":"xeon_l5640",

@@ -83,7 +83,7 @@ Returns:
             agent = agent_class(float(agent_options['gamma']), int(agent_options['hidden']),
                                 self.env.action_size, self.env.observation_size)
             # Load previously trained model if the user indicated as option
-            if 'input_model' in agent_options:
+            if 'input_model' in agent_options and path.isfile(agent_options['input_model']):
                 agent.load_state_dict(torch.load(agent_options['input_model']))
             # Create the optimizer if this is a training run
             if agent_options['run'] == 'train':
@@ -118,9 +118,11 @@ logged for observing performance.
         logging.info('Min scheduled jobs in one step: %s', self.scheduled_step["min"])
         logging.info('Average scheduled jobs in one step: %s', self.scheduled_step["total"]\
                                                                / self.scheduled_step["num_steps"])
-        # Save reward history
-        with open('rewards.log', 'a+') as out_f:
-            out_f.write(f'{np.sum(self.agent.rewards)}\n')
+        # Save metrics
+        with open('rewards.log', 'a+') as rewards_f,\
+             open('makespans.log', 'a+') as makespans_f:
+            rewards_f.write(f'{np.sum(self.agent.rewards)}\n')
+            makespans_f.write(f'{self.bs.time()}\n')
 
     def onJobSubmission(self, job: Job) -> None:
         """Set the "jobs_submitted" flag to ``True``.

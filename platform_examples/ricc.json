@@ -1,0 +1,22 @@
+{
+  "clusters": [
+    {
+      "id": "ricc_cluster",
+      "nodes": [
+        {
+          "type": "Fujitsu PRIMERGY RX200 S5",
+          "number": 1024
+        }
+      ],
+      "local_links": {
+        "type": "InfiniBand QDR",
+        "latency": "0us"
+      }
+    }
+  ],
+  "global_links": {
+    "type": "InfiniBand QDR",
+    "latency": "0us"
+  }
+}
+

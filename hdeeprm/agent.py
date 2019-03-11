@@ -95,7 +95,6 @@ Attributes:
 
     def __init__(self, policy_pair: str) -> None:
         super(ClassicAgent, self).__init__()
-        self.atype = 'CLASSIC'
         policy_pair_to_action = {
             'random-random': 0,
             'random-high_flops': 1,
@@ -153,7 +152,6 @@ Attributes:
 
     def __init__(self, gamma: float) -> None:
         super(LearningAgent, self).__init__()
-        self.atype = 'LEARNING'
         self.gamma = gamma
 
     def process(self, observation: np.ndarray) -> typing.Any:

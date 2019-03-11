@@ -149,6 +149,8 @@ Args:
         'udlink_routes': []
     }
     root_desc, shared_state['types'] = _load_data(platform_file_path)
+    root_el = None
+    main_zone_xml = None
     if shared_state['gen_platform_xml']:
         root_xml, main_zone_xml = _root_xml()
     if shared_state['gen_res_hierarchy']:
@@ -197,6 +199,7 @@ def _root_el() -> dict:
 def _generate_clusters(shared_state: dict, root_desc: dict, root_el: dict,
                        main_zone_xml: XMLElement) -> None:
     for cluster_desc in root_desc['clusters']:
+        cluster_el = None
         if shared_state['gen_platform_xml']:
             shared_state['cluster_xml'] = _cluster_xml(shared_state, main_zone_xml)
         if shared_state['gen_res_hierarchy']:
@@ -227,6 +230,7 @@ def _cluster_el(root_el: dict) -> dict:
 def _generate_nodes(shared_state: dict, cluster_desc: dict, cluster_el: dict) -> None:
     for node_desc in cluster_desc['nodes']:
         for _ in range(node_desc['number']):
+            node_el = None
             if shared_state['gen_platform_xml']:
                 _node_xml(shared_state, cluster_desc)
             if shared_state['gen_res_hierarchy']:
@@ -267,6 +271,9 @@ def _generate_processors(shared_state: dict, node_desc: dict, node_el: dict) -> 
         # Power consumption per Core in Watts
         power_per_core = shared_state['types']['processor'][proc_desc['type']]['power'] /\
                          shared_state['types']['processor'][proc_desc['type']]['cores']
+        proc_el = None
+        gflops_per_core_xml = None
+        power_per_core_xml = None
         if shared_state['gen_platform_xml']:
             gflops_per_core_xml, power_per_core_xml = _proc_xml(gflops_per_core, power_per_core)
         for _ in range(proc_desc['number']):
@@ -280,14 +287,14 @@ def _proc_xml(gflops_per_core: float, power_per_core: float) -> tuple:
     # For each processor several P-states are defined based on the utilization
     # P0 - 100% FLOPS - 100% Power / core - Job scheduled on the core
     # P1 - 75% FLOPS - 100% Power / core - Job scheduled on the core but constraint by memory BW
-    # P2 - 0% FLOPS - 15% Power / core - Job not scheduled but other job in same processor cores
+    # P2 - 0% FLOPS - 25% Power / core - Job not scheduled but other job in same processor cores
     # P3 - 0% FLOPS - 5% Power / core - Processor idle
     # These are further associated to each individual core
     gflops_per_core_xml = {'speed': (f'{gflops_per_core:.3f}Gf, {0.75 * gflops_per_core:.3f}Gf, '
                                      f'{0.001:.3f}f, {0.001:.3f}f')}
     power_per_core_xml = (f'{power_per_core:.3f}:{power_per_core:.3f}, '
                           f'{power_per_core:.3f}:{power_per_core:.3f}, '
-                          f'{0.15 * power_per_core:.3f}:{0.15 * power_per_core:.3f}, '
+                          f'{0.25 * power_per_core:.3f}:{0.25 * power_per_core:.3f}, '
                           f'{0.05 * power_per_core:.3f}:{0.05 * power_per_core:.3f}')
     return gflops_per_core_xml, power_per_core_xml
 
@@ -393,5 +400,4 @@ def _write_resource_hierarchy(shared_state: dict, root_el: dict) -> None:
         # Add the reference speed to the resource hierarchy
         root_el['reference_speed'] = numpy.mean(numpy.array(
             [core.processor['flops_per_core'] for core in shared_state['core_pool']]))
-        root_el['reference_speed'] = 22e9
         pickle.dump((root_el, shared_state['core_pool']), out_f)

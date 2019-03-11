@@ -38,7 +38,9 @@ Attributes:
         # Setup logging
         for handler in logging.root.handlers[:]:
             logging.root.removeHandler(handler)
-        logging.basicConfig(filename='insights.log', level=getattr(logging, options['log_level']))
+        logging.basicConfig(filename='insights.log', filemode='w+',
+                            level=getattr(logging, options['log_level']))
+        logging.getLogger('batsim').setLevel(logging.CRITICAL)
         self.job_scheduler = JobScheduler()
         self.resource_manager = ResourceManager()
         self.scheduled_step = {
@@ -67,6 +69,8 @@ Args:
         job.req_time = self.bs.profiles[job.workload][job.profile]['req_time']
         job.mem = self.bs.profiles[job.workload][job.profile]['mem']
         job.mem_bw = self.bs.profiles[job.workload][job.profile]['mem_bw']
+        logging.debug('Job arrived: %s %s %s %s %s', job.id, job.req_time, job.req_ops, job.mem,
+                      job.mem_bw)
         self.job_scheduler.new_job(job)
 
     def onJobCompletion(self, job: Job) -> None:

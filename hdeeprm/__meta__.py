@@ -14,7 +14,7 @@ Attributes:
 
 NAME = 'hdeeprm'
 PATH = NAME
-VERSION = '0.2.0.b0'
+VERSION = '0.2.0.b1'
 AUTHOR = 'Adrián Herrera'
 AUTHOR_EMAIL = 'adr.her.arc.95@gmail.com'
 DESCRIPTION = 'Evaluate Deep Reinforcement Learning policies for heterogeneous Workload Management'

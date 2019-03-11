@@ -1,0 +1,456 @@
+{
+  "clusters":[
+    {
+      "id":"ajax_cluster",
+      "nodes":[
+        {
+          "type":"Ajax Node",
+          "number":1
+        }
+      ],
+      "local_links":{
+        "type":"Gigabit Ethernet 1000BASE-T",
+        "latency":"100us"
+      }
+    },
+    {
+      "id":"alela_cluster",
+      "nodes":[
+        {
+          "type":"Alela Node",
+          "number":12
+        }
+      ],
+      "local_links":{
+        "type":"Gigabit Ethernet 1000BASE-T",
+        "latency":"100us"
+      }
+    },
+    {
+      "id":"doom_cluster",
+      "nodes":[
+        {
+          "type":"Doom Node",
+          "number":30
+        }
+      ],
+      "local_links":{
+        "type":"Gigabit Ethernet 1000BASE-T",
+        "latency":"100us"
+      }
+    },
+    {
+      "id":"eru_cluster",
+      "nodes":[
+        {
+          "type":"Eru Node",
+          "number":2
+        }
+      ],
+      "local_links":{
+        "type":"Gigabit Ethernet 1000BASE-T",
+        "latency":"100us"
+      }
+    },
+    {
+      "id":"gram_cluster",
+      "nodes":[
+        {
+          "type":"Gram Node",
+          "number":10
+        }
+      ],
+      "local_links":{
+        "type":"Gigabit Ethernet 1000BASE-T",
+        "latency":"100us"
+      }
+    },
+    {
+      "id":"haldir_cluster",
+      "nodes":[
+        {
+          "type":"Haldir Node",
+          "number":1
+        }
+      ],
+      "local_links":{
+        "type":"Gigabit Ethernet 1000BASE-T",
+        "latency":"100us"
+      }
+    },
+    {
+      "id":"hda_cluster",
+      "nodes":[
+        {
+          "type":"Hda Node",
+          "number":48
+        }
+      ],
+      "local_links":{
+        "type":"Gigabit Ethernet 1000BASE-T",
+        "latency":"100us"
+      }
+    },
+    {
+      "id":"hdb_cluster",
+      "nodes":[
+        {
+          "type":"Hdb Node",
+          "number":32
+        }
+      ],
+      "local_links":{
+        "type":"Gigabit Ethernet 1000BASE-T",
+        "latency":"100us"
+      }
+    },
+    {
+      "id":"hdc_cluster",
+      "nodes":[
+        {
+          "type":"Hdc Node",
+          "number":109
+        }
+      ],
+      "local_links":{
+        "type":"Gigabit Ethernet 1000BASE-T",
+        "latency":"100us"
+      }
+    },
+    {
+      "id":"hermes_cluster",
+      "nodes":[
+        {
+          "type":"Hermes Node",
+          "number":12
+        }
+      ],
+      "local_links":{
+        "type":"Gigabit Ethernet 1000BASE-T",
+        "latency":"100us"
+      }
+    },
+    {
+      "id":"hildor_cluster",
+      "nodes":[
+        {
+          "type":"Hildor Node",
+          "number":28
+        }
+      ],
+      "local_links":{
+        "type":"Gigabit Ethernet 1000BASE-T",
+        "latency":"100us"
+      }
+    },
+    {
+      "id":"kalpa_cluster",
+      "nodes":[
+        {
+          "type":"Kalpa Node",
+          "number":2
+        }
+      ],
+      "local_links":{
+        "type":"Gigabit Ethernet 1000BASE-T",
+        "latency":"100us"
+      }
+    },
+    {
+      "id":"konos_cluster",
+      "nodes":[
+        {
+          "type":"Konos Node",
+          "number":10
+        }
+      ],
+      "local_links":{
+        "type":"Gigabit Ethernet 1000BASE-T",
+        "latency":"100us"
+      }
+    },
+    {
+      "id":"losgar_cluster",
+      "nodes":[
+        {
+          "type":"Losgar Node",
+          "number":2
+        }
+      ],
+      "local_links":{
+        "type":"Gigabit Ethernet 1000BASE-T",
+        "latency":"100us"
+      }
+    },
+    {
+      "id":"loslab_cluster",
+      "nodes":[
+        {
+          "type":"Loslab Node",
+          "number":14
+        }
+      ],
+      "local_links":{
+        "type":"Gigabit Ethernet 1000BASE-T",
+        "latency":"100us"
+      }
+    },
+    {
+      "id":"luna_cluster",
+      "nodes":[
+        {
+          "type":"Luna Node",
+          "number":47
+        }
+      ],
+      "local_links":{
+        "type":"Gigabit Ethernet 1000BASE-T",
+        "latency":"100us"
+      }
+    },
+    {
+      "id":"mandos_cluster",
+      "nodes":[
+        {
+          "type":"Mandos Node",
+          "number":14
+        }
+      ],
+      "local_links":{
+        "type":"Gigabit Ethernet 1000BASE-T",
+        "latency":"100us"
+      }
+    },
+    {
+      "id":"manegrot_cluster",
+      "nodes":[
+        {
+          "type":"Manegrot Node",
+          "number":4
+        }
+      ],
+      "local_links":{
+        "type":"Gigabit Ethernet 1000BASE-T",
+        "latency":"100us"
+      }
+    },
+    {
+      "id":"manwe_cluster",
+      "nodes":[
+        {
+          "type":"Manwe Node A",
+          "number":6
+        },
+        {
+          "type":"Manwe Node B",
+          "number":1
+        }
+      ],
+      "local_links":{
+        "type":"Gigabit Ethernet 1000BASE-T",
+        "latency":"100us"
+      }
+    },
+    {
+      "id":"minos_cluster",
+      "nodes":[
+        {
+          "type":"Minos Node",
+          "number":49
+        }
+      ],
+      "local_links":{
+        "type":"Gigabit Ethernet 1000BASE-T",
+        "latency":"100us"
+      }
+    },
+    {
+      "id":"mudrc_cluster",
+      "nodes":[
+        {
+          "type":"Mudrc Node",
+          "number":12
+        }
+      ],
+      "local_links":{
+        "type":"Gigabit Ethernet 1000BASE-T",
+        "latency":"100us"
+      }
+    },
+    {
+      "id":"nympha_cluster",
+      "nodes":[
+        {
+          "type":"Nympha Node",
+          "number":20
+        }
+      ],
+      "local_links":{
+        "type":"Gigabit Ethernet 1000BASE-T",
+        "latency":"100us"
+      }
+    },
+    {
+      "id":"perian_cluster",
+      "nodes":[
+        {
+          "type":"Perian Node A",
+          "number":8
+        },
+        {
+          "type":"Perian Node B",
+          "number":10
+        },
+        {
+          "type":"Perian Node C",
+          "number":10
+        }
+      ],
+      "local_links":{
+        "type":"Gigabit Ethernet 1000BASE-T",
+        "latency":"100us"
+      }
+    },
+    {
+      "id":"quark_cluster",
+      "nodes":[
+        {
+          "type":"Quark Node A",
+          "number":5
+        },
+        {
+          "type":"Quark Node B",
+          "number":1
+        },
+        {
+          "type":"Quark Node C",
+          "number":7
+        },
+        {
+          "type":"Quark Node D",
+          "number":3
+        }
+      ],
+      "local_links":{
+        "type":"Gigabit Ethernet 1000BASE-T",
+        "latency":"100us"
+      }
+    },
+    {
+      "id":"ramdal_cluster",
+      "nodes":[
+        {
+          "type":"Ramdal Node",
+          "number":1
+        }
+      ],
+      "local_links":{
+        "type":"Gigabit Ethernet 1000BASE-T",
+        "latency":"100us"
+      }
+    },
+    {
+      "id":"skirit_cluster",
+      "nodes":[
+        {
+          "type":"Skirit Node A",
+          "number":32
+        },
+        {
+          "type":"Skirit Node B",
+          "number":35
+        },
+        {
+          "type":"Skirit Node C",
+          "number":1
+        }
+      ],
+      "local_links":{
+        "type":"Gigabit Ethernet 1000BASE-T",
+        "latency":"100us"
+      }
+    },
+    {
+      "id":"tarkil_cluster",
+      "nodes":[
+        {
+          "type":"Tarkil Node",
+          "number":28
+        }
+      ],
+      "local_links":{
+        "type":"Gigabit Ethernet 1000BASE-T",
+        "latency":"100us"
+      }
+    },
+    {
+      "id":"ungu_cluster",
+      "nodes":[
+        {
+          "type":"Ungu Node",
+          "number":1
+        }
+      ],
+      "local_links":{
+        "type":"Gigabit Ethernet 1000BASE-T",
+        "latency":"100us"
+      }
+    },
+    {
+      "id":"urga_cluster",
+      "nodes":[
+        {
+          "type":"Urga Node",
+          "number":1
+        }
+      ],
+      "local_links":{
+        "type":"Gigabit Ethernet 1000BASE-T",
+        "latency":"100us"
+      }
+    },
+    {
+      "id":"zebra_cluster",
+      "nodes":[
+        {
+          "type":"Zebra Node",
+          "number":24
+        }
+      ],
+      "local_links":{
+        "type":"Gigabit Ethernet 1000BASE-T",
+        "latency":"100us"
+      }
+    },
+    {
+      "id":"zewura_cluster",
+      "nodes":[
+        {
+          "type":"Zewura Node",
+          "number":7
+        }
+      ],
+      "local_links":{
+        "type":"Gigabit Ethernet 1000BASE-T",
+        "latency":"100us"
+      }
+    },
+    {
+      "id":"zorg_cluster",
+      "nodes":[
+        {
+          "type":"Zorg Node",
+          "number":1
+        }
+      ],
+      "local_links":{
+        "type":"Gigabit Ethernet 1000BASE-T",
+        "latency":"100us"
+      }
+    }
+  ],
+  "global_links":{
+    "type":"Gigabit Ethernet 1000BASE-T",
+    "latency":"150us"
+  }
+}

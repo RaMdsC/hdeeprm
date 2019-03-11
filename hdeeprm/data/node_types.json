@@ -58,6 +58,20 @@
     ],
     "memory":{"type":"DDR3-1600", "capacity":64}
   },
+  "Fujitsu PRIMERGY RX200 S5":{
+    "id":"fujitsu_primergy_rx200s5",
+    "processors":[
+      {"type":"Xeon X5570", "number":2}
+    ],
+    "memory":{"type":"DDR3-1600", "capacity":12}
+  },
+  "DAS2-fs0":{
+    "id":"das2_fs0",
+    "processors":[
+      {"type":"Pentium III", "number":1}
+    ],
+    "memory":{"type":"DDR3-1600", "capacity":1}
+  },
   "Bullx B500-0":{
     "id":"bullx_b500_0",
     "processors":[

@@ -1,0 +1,22 @@
+{
+  "clusters": [
+    {
+      "id": "das2_cluster",
+      "nodes": [
+        {
+          "type": "DAS2-fs0",
+          "number": 72
+        }
+      ],
+      "local_links": {
+        "type": "InfiniBand QDR",
+        "latency": "0us"
+      }
+    }
+  ],
+  "global_links": {
+    "type": "InfiniBand QDR",
+    "latency": "0us"
+  }
+}
+

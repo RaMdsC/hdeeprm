@@ -1,6 +1,13 @@
 Changelog
 =========
 
+`0.2.0b1 <https://github.com/RaMdsC/hdeeprm/tree/0.2.0b1>`__ (11-03-2019)
+-------------------------------------------------------------------------
+
+- New *hdeeprm-clean* utility for fast testing. Erases all files in current
+  directory except for *options.json*.
+- Added agent and platform examples.
+
 `0.2.0b0 <https://github.com/RaMdsC/hdeeprm/tree/0.2.0b0>`__ (04-03-2019)
 -------------------------------------------------------------------------
 

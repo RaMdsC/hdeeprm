@@ -37,7 +37,8 @@ Executes the setup and installs the HDeepRM package.
         entry_points={
             'console_scripts': [
                 'hdeeprm-launch = hdeeprm.cmd:launch',
-                'hdeeprm-stat = hdeeprm.cmd:stat'
+                'hdeeprm-stat = hdeeprm.cmd:stat',
+                'hdeeprm-clean = hdeeprm.cmd:clean'
             ]
         },
         include_package_data=True)
