@@ -1,6 +1,15 @@
 Changelog
 =========
 
+`0.3.0b0 <https://github.com/RaMdsC/hdeeprm/tree/0.2.0b1>`__ (11-03-2019)
+-------------------------------------------------------------------------
+
+- Added thesis experiments.
+- New *hdeeprm-jobstat* utility for exploring workload trace statistics.
+- Tracking of memory over-utilization periods.
+- New visualizations for exploring over-utilizations.
+- Fixed agent bugs.
+
 `0.2.1b0 <https://github.com/RaMdsC/hdeeprm/tree/0.2.0b1>`__ (11-03-2019)
 -------------------------------------------------------------------------
 
