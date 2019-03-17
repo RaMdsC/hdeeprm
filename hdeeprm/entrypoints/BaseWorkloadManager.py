@@ -2,6 +2,7 @@
 A basic Workload Manager for heterogeneous Platforms.
 """
 
+import json
 import logging
 import random
 import numpy as np
@@ -85,9 +86,22 @@ Args:
         The completed Job.
         """
 
+        # Record memory bandwidth over-utilization releases
+        modified, mem_bw_utilization_changes = self.resource_manager.update_state(
+            job, list(job.allocation), 'FREE', self.bs.time()
+        )
+        for proc_id in mem_bw_utilization_changes:
+            if self.resource_manager.over_utilization['mem_bw']['procs'][proc_id]['state'] == 1:
+                self.resource_manager.over_utilization['mem_bw']['procs'][proc_id]['state'] = 0
+                initial_t = self.resource_manager\
+                    .over_utilization['mem_bw']['procs'][proc_id]['values'].pop()
+                self.resource_manager\
+                    .over_utilization['mem_bw']['procs'][proc_id]['values'].append(
+                        (initial_t, self.bs.time() - initial_t)
+                    )
         self.resource_manager.state_changes = {
             **self.resource_manager.state_changes,
-            **self.resource_manager.update_state(job, list(job.allocation), 'FREE', self.bs.time())
+            **modified
         }
         self.job_scheduler.nb_active_jobs -= 1
         self.job_scheduler.nb_completed_jobs += 1
@@ -103,6 +117,15 @@ changes.
         if self.bs.running_simulation:
             self.schedule_jobs()
             self.change_resource_states()
+
+    def onSimulationEnds(self) -> None:
+        """Handler triggered when the simulation has ended.
+
+It records the over-utilizations during the simulation.
+        """
+
+        with open('overutilizations.json', 'w+') as out_f:
+            json.dump(self.resource_manager.over_utilization, out_f)
 
     def schedule_jobs(self) -> None:
         """Maps pending Jobs into available resources.

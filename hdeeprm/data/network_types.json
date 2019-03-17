@@ -8,7 +8,10 @@
     "bandwidth":"54.54Gbps"
   },
   "InfiniBand QDR":{
-    "bandwidth":"40.0Gbps"
+    "bandwidth":"10.0Gbps"
+  },
+  "InfiniBand DDR":{
+    "bandwidth":"5.0Gbps"
   },
   "Gigabit Ethernet 1000BASE-T":{
     "bandwidth":"1.0Gbps"

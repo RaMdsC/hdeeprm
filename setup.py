@@ -39,6 +39,7 @@ Executes the setup and installs the HDeepRM package.
                 'hdeeprm-launch = hdeeprm.cmd:launch',
                 'hdeeprm-visual = hdeeprm.cmd:visual',
                 'hdeeprm-metrics = hdeeprm.cmd:metrics',
+                'hdeeprm-jobstat = hdeeprm.cmd:jobstat',
                 'hdeeprm-clean = hdeeprm.cmd:clean'
             ]
         },

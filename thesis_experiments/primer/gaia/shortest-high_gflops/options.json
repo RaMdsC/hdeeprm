@@ -1,0 +1,18 @@
+{
+  "seed": 20091995,
+  "nb_resources": 2280,
+  "nb_jobs": 1000,
+  "workload_file_path": "/workspace/workloads/gaia.swf",
+  "platform_file_path": "/workspace/platforms/gaia.json",
+  "pybatsim": {
+    "log_level": "DEBUG",
+    "env": {
+      "objective": "avg_job_slowdown",
+      "queue_sensitivity": 0.05
+    },
+    "agent": {
+      "type": "CLASSIC",
+      "policy_pair": "shortest-high_gflops"
+    }
+  }
+}

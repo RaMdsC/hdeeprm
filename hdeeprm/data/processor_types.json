@@ -53,9 +53,9 @@
     "power":100,
     "dpflops_per_cycle":4
   },
-  "Test0_P0":{
-    "uarch":"test0_p0",
-    "id":"test0_p0",
+  "Test0":{
+    "uarch":"test0",
+    "id":"test0",
     "type":"CPU",
     "cores":2,
     "clock_rate":1,
@@ -64,26 +64,15 @@
     "power":100,
     "dpflops_per_cycle":4
   },
-  "Test0_P1":{
-    "uarch":"test0_p1",
-    "id":"test0_p1",
+  "TestMem":{
+    "uarch":"test_mem",
+    "id":"test_mem",
     "type":"CPU",
     "cores":2,
-    "clock_rate":1.2,
+    "clock_rate":1,
     "mem_bw":32,
-    "llc_size":8,
-    "power":100,
-    "dpflops_per_cycle":4
-  },
-  "Test0_P2":{
-    "uarch":"test0_p2",
-    "id":"test0_p2",
-    "type":"CPU",
-    "cores":2,
-    "clock_rate":1.4,
-    "mem_bw":32,
-    "llc_size":8,
-    "power":100,
+    "llc_size":16,
+    "power":80,
     "dpflops_per_cycle":4
   },
   "Pentium III":{

@@ -1,0 +1,22 @@
+{
+  "clusters": [
+    {
+      "id": "pik_cluster",
+      "nodes": [
+        {
+          "type": "IBM System x iDataPlex dx360 (Xeon E5472)",
+          "number": 320
+        }
+      ],
+      "local_links": {
+        "type": "InfiniBand DDR",
+        "latency": "0us"
+      }
+    }
+  ],
+  "global_links": {
+    "type": "InfiniBand DDR",
+    "latency": "0us"
+  }
+}
+

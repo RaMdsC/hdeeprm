@@ -12,7 +12,7 @@ import torch
 from batsim.batsim import Job
 from hdeeprm.agent import Agent, ClassicAgent
 from hdeeprm.entrypoints.BaseWorkloadManager import BaseWorkloadManager
-from hdeeprm.environment import HDeepRMEnv
+from hdeeprm.environment import HDeepRMEnv, HDeepRMEnvSmall, HDeepRMEnvMinimal
 
 class HDeepRMWorkloadManager(BaseWorkloadManager):
     """Entrypoint for Deep Reinforcement Learning experimentation.
@@ -45,7 +45,7 @@ Attributes:
 
     def __init__(self, options: dict) -> None:
         super().__init__(options)
-        self.env = HDeepRMEnv(self, options['env'])
+        self.env = HDeepRMEnvMinimal(self, options['env'])
         self.agent, self.optimizer = self.create_agent(options['agent'], options['seed'])
         self.step = 0
         self.flow_flags = {
@@ -83,14 +83,15 @@ Returns:
             agent = agent_class(float(agent_options['gamma']), int(agent_options['hidden']),
                                 self.env.action_size, self.env.observation_size)
             # Load previously trained model if the user indicated as option
+            optimizer = torch.optim.Adam(agent.parameters(), lr=float(agent_options['lr']))
             if 'input_model' in agent_options and path.isfile(agent_options['input_model']):
-                agent.load_state_dict(torch.load(agent_options['input_model']))
-            # Create the optimizer if this is a training run
+                checkpoint = torch.load(agent_options['input_model'])
+                agent.load_state_dict(checkpoint['model_state_dict'])
+                optimizer.load_state_dict(checkpoint['optimizer_state_dict'])
             if agent_options['run'] == 'train':
-                optimizer = torch.optim.Adam(agent.parameters(), lr=float(agent_options['lr']))
-            # If not, seed torch for reproducibility
+                agent.train()
             else:
-                torch.random.manual_seed(seed)
+                agent.eval()
         else:
             raise TypeError('Unrecognized agent type')
         return agent, optimizer
@@ -105,14 +106,21 @@ weights. The updated model is saved if the user has indicated so in command line
 logged for observing performance.
         """
 
+        super().onSimulationEnds()
         if self.options['agent']['type'] == 'LEARNING' and self.options['agent']['run'] == 'train':
             loss = self.agent.loss()
+            logging.info('Loss %s', loss)
+            with open('losses.log', 'a+') as out_f:
+                out_f.write(f'{loss}\n')
             # Update parameters
             self.optimizer.zero_grad()
             loss.backward()
             self.optimizer.step()
             if 'output_model' in self.options['agent']:
-                torch.save(self.agent.state_dict(), self.options['agent']['output_model'])
+                torch.save({
+                    'model_state_dict': self.agent.state_dict(),
+                    'optimizer_state_dict': self.optimizer.state_dict()
+                }, self.options['agent']['output_model'])
         # Log scheduled metrics
         logging.info('Max scheduled jobs in one step: %s', self.scheduled_step["max"])
         logging.info('Min scheduled jobs in one step: %s', self.scheduled_step["min"])
@@ -121,7 +129,8 @@ logged for observing performance.
         # Save metrics
         with open('rewards.log', 'a+') as rewards_f,\
              open('makespans.log', 'a+') as makespans_f:
-            rewards_f.write(f'{np.sum(self.agent.rewards)}\n')
+            rewards_f.write(f'{self.agent.rewards}\n')
+            rewards_f.write(f'Sum: {np.sum(self.agent.rewards)}\n')
             makespans_f.write(f'{self.bs.time()}\n')
 
     def onJobSubmission(self, job: Job) -> None:

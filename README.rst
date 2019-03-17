@@ -1,31 +1,31 @@
 HDeepRM
 =======
 
-Framework for evaluating Workload Management policies based on
-Deep Reinforcement Learning for Heterogeneous Clusters.
+Framework for evaluating *workload management* policies based on
+*deep reinforcement learning* for *heterogeneous* clusters.
 
 .. include-overview-start
 
 Overview
 --------
 
-HDeepRM is a Python framework for evaluating Workload Management policies
-based on Deep Reinforcement Learning for Heterogeneous Clusters. It
+*HDeepRM* is a Python framework for evaluating workload management policies
+based on deep reinforcement learning for heterogeneous clusters. It
 leverages the `Batsim ecosystem <https://gitlab.inria.fr/batsim>`_
-for simulating a heterogeneous Workload Management context. This is composed
-of the Simulator, `Batsim <https://gitlab.inria.fr/batsim/batsim>`_ and the
-Decision System, `PyBatsim <https://gitlab.inria.fr/batsim/pybatsim>`_.
+for simulating a heterogeneous workload management context. This is composed
+of the *simulator*, `Batsim <https://gitlab.inria.fr/batsim/batsim>`_ and the
+*decision system*, `PyBatsim <https://gitlab.inria.fr/batsim/pybatsim>`_.
 
 HDeepRM provides a heterogeneity layer on top of PyBatsim, which adds support
-for user-defined resource hierarchies. Memory and bandwidth conflicts are added
-along with interdependence when consolidating or scattering jobs across the
-data centre.
+for user-defined resource hierarchies. Memory capacity and bandwidth conflicts
+are added along with interdependence when consolidating or scattering jobs across
+the data centre.
 
-It offers a flexible API for developing Deep Reinforcement Learning agents.
+It offers a flexible API for developing deep reinforcement learning agents.
 These may be trained by providing real workload traces in
 `SWF format <http://www.cs.huji.ac.il/labs/parallel/workload/swf.html>`_ along
 with platforms defined in the format specified in `Platforms <TODO>`_. They can
-be further evaluated and tested against traditional policies.
+be further evaluated and tested against classic policies.
 
 Installation Prerequisites
 ~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -43,7 +43,7 @@ In order to download and install it, the following software is needed:
 Installation
 ~~~~~~~~~~~~
 
-In order to install HDeepRM, just download the package from PyPi:
+For installing HDeepRM, just download the package from PyPi:
 
 .. code-block:: bash
 
@@ -65,13 +65,13 @@ This should download the ``hdeeprm`` package with all its dependencies,
 which are:
 
 - ``defusedxml`` >= 0.5.0: secure XML generation and parsing.
-- ``gym`` >= 0.11.0: environment, actions and observations definitions.
-- ``lxml`` >= 4.3.1: generation of the XML tree. Backend for ``defusedxml``.
-- ``numpy`` >= 1.16.1: efficient data structure operations.
+- ``gym`` >= 0.12.0: environment, actions and observations definitions.
+- ``lxml`` >= 4.3.2: generation of the XML tree. Backend for ``defusedxml``.
+- ``numpy`` >= 1.16.2: efficient data structure operations.
 - ``procset`` >= 1.0: closed-interval sets for resource selection.
 - ``pybatsim`` >= 3.1.0: decision system and main interface to interact
   with Batsim.
-- ``torch`` >= 1.0.1: deep learning library for agent definition.
+- ``torch`` >= 1.0.1.post2: deep learning library for agent definition.
 
 Usage Prerequisites
 ~~~~~~~~~~~~~~~~~~~
@@ -87,10 +87,7 @@ In order to experiment with HDeepRM, an integrated launcher is provided:
 
 .. code-block:: bash
 
-  hdeeprm-launch <agent.py> <options.json> --inmodel <saved_model.pt> --outmodel <to_save_model.pt>
-
-The ``agent.py`` file contains your developed agent for evaluation.
-See `agent examples <TODO>`_ for reference.
+  hdeeprm-launch -a <agent.py> -im <saved_model.pt> -om <to_save_model.pt> <options.json>
 
 The ``options.json`` specifies the experiment parameters. The JSON structure
 is as follows:
@@ -110,15 +107,12 @@ is as follows:
         "queue_sensitivity": ""
       },
       "agent": {
-        "classic": {
-          "policy_pair": ""
-        },
-        "learning": {
-          "run": "",
-          "hidden": "",
-          "lr": "",
-          "gamma": ""
-        }
+        "type": "",
+        "policy_pair": "",
+        "run": "",
+        "hidden": "",
+        "lr": "",
+        "gamma": ""
       }
     }
   }
@@ -141,13 +135,17 @@ PyBatsim - Environment options:
 * ``objective`` - Metric to be optimised by the agent. See `Objectives <TODO>`_ for an explanation and recognised values.
 * ``queue_sensitivity`` - Sensitivity of the observation to variations in job queue size. See `Hyperparameters - Queue Sensitivity <TODO>`_.
 
-PyBatsim - Agent - `Classic <https://hdeeprm.readthedocs.io/en/latest/source/packages/hdeeprm.agent.html#hdeeprm.agent.ClassicAgent>`_ options:
+PyBatsim - Common agent options:
+
+* ``type`` - Type of the scheduling agent, one of *CLASSIC* or *LEARNING*.
+
+PyBatsim - `Classic <https://hdeeprm.readthedocs.io/en/latest/source/packages/hdeeprm.agent.html#hdeeprm.agent.ClassicAgent>`_ agent options:
 
 * ``policy_pair`` - The job and resource selection policies. Policy pairs are further described in `Environment - Action Space <TODO>`_.
 
-PyBatsim - Agent - `Learning <https://hdeeprm.readthedocs.io/en/latest/source/packages/hdeeprm.agent.html#hdeeprm.agent.LearningAgent>`_ options:
+PyBatsim - `Learning <https://hdeeprm.readthedocs.io/en/latest/source/packages/hdeeprm.agent.html#hdeeprm.agent.LearningAgent>`_ agent options:
 
-* ``run`` - Type of run for the learning agent, can be *train* or *test*.
+* ``run`` - Type of run for the learning agent, one of *train* or *test*.
   When training, the agent's inner model is updated,
   whereas testing is meant for evaluation purposes.
 * ``hidden`` - Number of units in each hidden layer from the agent's inner model. See `Hyperparameters - Hidden units <TODO>`_.
@@ -172,9 +170,8 @@ for a classic agent:
         "queue_sensitivity": 0.05
       },
       "agent": {
-        "classic": {
-          "policy_pair": "shortest-high_flops"
-        }
+        "type": "CLASSIC",
+        "policy_pair": "shortest-high_flops"
       }
     }
   }
@@ -198,25 +195,26 @@ in this case for a learning agent:
         "queue_sensitivity": 0.01
       },
       "agent": {
-        "learning": {
-          "run": "train",
-          "hidden": 128,
-          "lr": 0.001,
-          "gamma": 0.99
-        }
+        "type": "LEARNING",
+        "run": "train",
+        "hidden": 128,
+        "lr": 0.001,
+        "gamma": 0.99
       }
     }
   }
 
-The ``inmodel`` optional argument may be used for providing a path
-to a previously trained and saved model. HDeepRM will load this model
-before starting the run.
+Extra command line arguments are available for learning agent simulations:
 
-The ``outmodel`` optional argument may be specified as a path for
-saving the model after the run is finished. If not provide, the model
-won't be saved. This is usually combined with *train* runs.
+- The ``agent.py`` file contains your developed learning agent for evaluation.
+  See `agent examples <TODO>`_ for reference.
 
-Take into account that these arguments are only relevant for learning
-agents.
+- The ``inmodel`` optional argument may be used for providing a path
+  to a previously trained and saved model. HDeepRM will load this model
+  before starting the run.
+
+- The ``outmodel`` optional argument may be specified as a path for
+  saving the model after the run is finished. If not provide, the model
+  won't be saved. This is usually combined with *train* runs.
 
 .. include-overview-end

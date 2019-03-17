@@ -1,0 +1,18 @@
+{
+  "seed": 20091995,
+  "nb_resources": 10002,
+  "nb_jobs": 1000,
+  "workload_file_path": "/workspace/workloads/mc2.swf",
+  "platform_file_path": "/workspace/platforms/mc2.json",
+  "pybatsim": {
+    "log_level": "DEBUG",
+    "env": {
+      "objective": "avg_job_slowdown",
+      "queue_sensitivity": 0.05
+    },
+    "agent": {
+      "type": "CLASSIC",
+      "policy_pair": "first-high_gflops"
+    }
+  }
+}

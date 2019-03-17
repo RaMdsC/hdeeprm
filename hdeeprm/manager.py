@@ -89,6 +89,8 @@ Attributes:
         Resource Hierarchy for relations. See :class:`~hdeeprm.resource.Core` for fields.
     core_pool (list):
         Contains all Cores in the Platform for filtering.
+    over_utilization (dict):
+        Tracks over-utilizations of cores, memory capacity and memory bandwidth.
     sorting_key (function):
         Key defining the Core selection policy.
     """
@@ -101,6 +103,14 @@ Attributes:
         # Add the job resource requirement limits to the resource hierarchy
         with open('./job_limits.pkl', 'rb') as in_f:
             self.platform['job_limits'] = pickle.load(in_f)
+        self.over_utilization = {
+            'core': [],
+            'mem': [],
+            'mem_bw': {
+                'nb_procs': self.platform['total_processors'],
+                'procs': {}
+            } 
+        }
         self.sorting_key = None
 
     def get_resources(self, job: Job, now: float) -> ProcSet:
@@ -124,32 +134,52 @@ Returns:
         # Also save a reference to modified IDs to later communicate their changes
         # to Batsim
         modified = {}
+        # Record memory bandwidth utilization changes
+        mem_bw_utilization_changes = set()
+        available = [core for core in self.core_pool if not core.state['served_job']]
+        if len(available) < job.requested_resources:
+            self.over_utilization['core'].append(now)
+            return None
         for _ in range(job.requested_resources):
-            available = [core for core in self.core_pool if not core.state['served_job'] and\
-                         core.processor['node']['current_mem'] >= job.mem]
+            mem_available = [
+                core for core in available if core.processor['node']['current_mem'] >= job.mem
+            ]
             # Sorting is needed everytime we access since completed jobs or assigned cores
             # might have changed the state
             if self.sorting_key:
-                available.sort(key=self.sorting_key)
-            if available:
+                mem_available.sort(key=self.sorting_key)
+            if mem_available:
                 if not self.sorting_key:
-                    selected_id = random.choice(available).bs_id
+                    selected_id = random.choice(mem_available).bs_id
                 else:
-                    selected_id = available[0].bs_id
+                    selected_id = mem_available[0].bs_id
                 # Update the core state
-                modified = {**modified, **self.update_state(job, [selected_id], 'LOCKED', now)}
+                _modified, _mem_bw_utilization_changes = self.update_state(job, [selected_id],
+                                                                           'LOCKED', now)
+                modified = {**modified, **_modified}
+                mem_bw_utilization_changes = mem_bw_utilization_changes.union(
+                    _mem_bw_utilization_changes)
                 # Add its ID to the temporarily selected core buffer
                 selected.append(selected_id)
+                available = [core for core in available if core.bs_id not in selected]
             else:
                 # There are no sufficient resources, revert the state of the
                 # temporarily selected
                 self.update_state(job, selected, 'FREE', now)
+                self.over_utilization['mem'].append(now)
                 return None
+        # Check and record memory bandwidth over-utilizations
+        for proc_id in mem_bw_utilization_changes:
+            if not proc_id in self.over_utilization['mem_bw']['procs']:
+                self.over_utilization['mem_bw']['procs'][proc_id] = {'state': 1, 'values': [now]}
+            elif self.over_utilization['mem_bw']['procs'][proc_id]['state'] == 0:
+                self.over_utilization['mem_bw']['procs'][proc_id]['state'] = 1
+                self.over_utilization['mem_bw']['procs'][proc_id]['values'].append(now)
         # Store modifications for commit
         self.state_changes = {**self.state_changes, **modified}
         return ProcSet(*selected)
 
-    def update_state(self, job: Job, id_list: list, new_state: str, now: float) -> dict:
+    def update_state(self, job: Job, id_list: list, new_state: str, now: float) -> tuple:
         """Modifies the state of the computing resources.
 
 This affects speed, power and availability for selection. Modifications are local to the Decision
@@ -172,8 +202,10 @@ Returns:
         """
 
         # Modify states of the cores
-        # We associate each affected core with a new P-State
+        # Associate each affected core with a new P-State
         modified = {}
+        # Record memory bandwidth utlization changes
+        mem_bw_utilization_changes = set()
         for bs_id in id_list:
             score = self.core_pool[bs_id]
             processor = score.processor
@@ -187,9 +219,9 @@ Returns:
                         lcore.set_state(2, now)
                         modified[lcore.bs_id] = 2
                     # If the memory bandwidth capacity is now overutilized,
-                    # transition every active core of the processor into state 1 (reduced FLOPS)
+                    # transition every active core of the processor into state 1 (reduced GFLOPS)
                     if processor['current_mem_bw'] < 0.0 and lcore.state['pstate'] == 0:
-                        logging.warning('Memory bandwidth overutilized!')
+                        mem_bw_utilization_changes.add(processor['id'])
                         lcore.set_state(1, now)
                         modified[lcore.bs_id] = 1
             elif new_state == 'FREE':
@@ -206,8 +238,9 @@ Returns:
                     # If bandwidth is now not overutilized, scale
                     # to full potential (P0) other active cores
                     if processor['current_mem_bw'] >= 0.0 and lcore.state['pstate'] == 1:
+                        mem_bw_utilization_changes.add(processor['id'])
                         lcore.set_state(0, now)
                         modified[lcore.bs_id] = 0
             else:
                 raise ValueError('Error: unknown state')
-        return modified
+        return modified, mem_bw_utilization_changes

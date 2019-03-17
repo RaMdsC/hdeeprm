@@ -43,20 +43,26 @@
       "capacity":32
     }
   },
-  "Test0_N0":{
-    "id":"test0_n0",
+  "Test0":{
+    "id":"test0",
     "processors":[
-      {"type":"Test0_P0", "number":1}
+      {"type":"Test0", "number":2}
     ],
-    "memory":{"type":"DDR3-1600", "capacity":64}
+    "memory":{"type":"DDR3-1600", "capacity":32}
   },
-  "Test0_N1":{
-    "id":"test0_n1",
+  "TestMem":{
+    "id":"test_mem",
     "processors":[
-      {"type":"Test0_P1", "number":1},
-      {"type":"Test0_P2", "number":1}
+      {"type":"TestMem", "number":1}
     ],
-    "memory":{"type":"DDR3-1600", "capacity":64}
+    "memory":{"type":"DDR3-1600", "capacity":16}
+  },
+  "IBM System x iDataPlex dx360 (Xeon E5472)":{
+    "id":"ibm_systemx_idataplex_dx360_xeon_e5472",
+    "processors":[
+      {"type":"Xeon E5472", "number":2}
+    ],
+    "memory":{"type":"DDR3-1600", "capacity":32}
   },
   "Fujitsu PRIMERGY RX200 S5":{
     "id":"fujitsu_primergy_rx200s5",

@@ -37,11 +37,9 @@ Attributes:
         self.output = nn.Linear(hidden, action_size)
 
     def forward_policy(self, observation: np.ndarray) -> torch.Tensor:
-        out_0 = F.leaky_relu(self.input(observation))
-        out_1 = F.leaky_relu(self.hidden_0(out_0))
-        out_2 = F.leaky_relu(self.hidden_1(out_1))
-        out_3 = F.leaky_relu(self.hidden_2(out_2))
-        return F.softmax(self.output(out_3), dim=1)
-
-    def forward(self, *inp):
-        pass
+        int_0 = F.leaky_relu(self.input(observation))
+        int_1 = F.leaky_relu(self.hidden_0(int_0))
+        int_2 = F.leaky_relu(self.hidden_1(int_1))
+        int_3 = F.leaky_relu(self.hidden_2(int_2))
+        out = self.output(int_3)
+        return F.softmax(out, dim=1)

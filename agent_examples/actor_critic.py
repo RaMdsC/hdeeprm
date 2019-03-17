@@ -61,7 +61,7 @@ Attributes:
         self.save_value(value)
         return self.get_action(probs)
 
-    def process(self, observation: np.ndarray) -> tuple:
+    def forward(self, observation: np.ndarray) -> tuple:
         observation = torch.from_numpy(observation).float().unsqueeze(0)
         probs = self.forward_policy(observation)
         value = self.forward_value(observation)

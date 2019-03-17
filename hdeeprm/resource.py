@@ -44,7 +44,7 @@ Attributes:
 
       | max_mem_bw (:class:`float`) - Maximum memory BW capacity of the Processor in GB/s.
       | current_mem_bw (:class:`float`) - Current memory BW capacity of the Processor in GB/s.
-      | flops_per_core (:class:`float`) - Maximum FLOPs per Core in the Processor.
+      | gflops_per_core (:class:`float`) - Maximum GFLOPs per Core in the Processor.
       | power_per_core (:class:`float`) - Maximum Watts per Core in the Processor.
       | local_cores (list(:class:`.Core`)) - Reference to local Cores to the Processor.
 
@@ -52,7 +52,7 @@ Attributes:
     state (dict): Defines the current state of the Core. Data fields:
 
       | pstate (:class:`int`) - P-state for the Core.
-      | current_flops (:class:`float`) - Current computing capability in FLOPs.
+      | current_gflops (:class:`float`) - Current computing capability in GFLOPs.
       | current_power (:class:`float`) - Current power consumption in Watts.
       | served_job (batim.batsim.Job) - Job being served by the Core.
     """
@@ -63,7 +63,7 @@ Attributes:
         # By default, core is idle
         self.state = {
             'pstate': 3,
-            'current_flops': 0.0,
+            'current_gflops': 0.0,
             'current_power': 0.05 * self.processor['power_per_core'],
             # When active, the Core is serving a Job which is stored as part of its state
             # Remaining operations and updates along simulation are tracked
@@ -98,19 +98,19 @@ Args:
             # 100% Power
             self.state['current_power'] = self.processor['power_per_core']
             if new_pstate == 0:
-                # 100% FLOPS
-                self.state['current_flops'] = self.processor['flops_per_core']
+                # 100% GFLOPS
+                self.state['current_gflops'] = self.processor['gflops_per_core']
             else:
-                # 75% FLOPS
-                self.state['current_flops'] = 0.75 * self.processor['flops_per_core']
+                # 75% GFLOPS
+                self.state['current_gflops'] = 0.75 * self.processor['gflops_per_core']
         # Inactive core
         elif new_pstate in (2, 3):
             if self.state['served_job']:
                 self.processor['current_mem_bw'] += self.state['served_job'].mem_bw
                 self.processor['node']['current_mem'] += self.state['served_job'].mem
                 self.state['served_job'] = None
-            # 0% FLOPS
-            self.state['current_flops'] = 0.0
+            # 0% GFLOPS
+            self.state['current_gflops'] = 0.0
             if new_pstate == 2:
                 # 15% Power
                 self.state['current_power'] = 0.15 * self.processor['power_per_core']
@@ -132,7 +132,7 @@ Args:
         """
 
         time_delta = now - self.state['served_job'].last_update
-        self.state['served_job'].remaining_ops -= self.state['current_flops'] * time_delta
+        self.state['served_job'].remaining_ops -= self.state['current_gflops'] * time_delta
         self.state['served_job'].last_update = now
 
     def get_remaining_per(self) -> float:

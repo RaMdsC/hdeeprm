@@ -11,7 +11,8 @@ import numpy.random as nprnd
 import hdeeprm.resource as res
 from hdeeprm.__xml__ import exml, XMLElement
 
-def generate_workload(workload_file_path: str, nb_cores: int, nb_jobs: int) -> None:
+def generate_workload(workload_file_path: str, nb_cores: int, nb_jobs: int,
+                      custom_workload_path: str = None) -> None:
     """SWF-formatted Workload -> Batsim-ready JSON format.
 
 Parses a SWF formatted Workload file into a Batsim-ready JSON file. Generates as many jobs as
@@ -24,83 +25,94 @@ Args:
         Total number of Cores in the Platform.
     nb_jobs (int):
         Total number of jobs for the generated Workload.
+    custom_workload_path (str):
+        Path for the custom workload JSON file. ``None`` by default.
     """
 
     # Load the reference speed for operations calculation
     with open('./res_hierarchy.pkl', 'rb') as in_f:
         reference_speed = pickle.load(in_f)[0]['reference_speed']
-
-    with open(workload_file_path, 'r') as in_f:
-        workload = {
-            'nb_res': nb_cores,
-            'jobs': [],
-            'profiles': {}
-        }
-        # Read each Job from the SWF file and parse the fields
-        min_submit_time = None
-        job_id = 0
-        for line in in_f:
-            # End if total number of jobs has been reached
-            if job_id == nb_jobs:
-                break
-            # Skip comments
-            if line.startswith(';'):
-                continue
-            job_info = tuple(map(lambda par: int(float(par)), line.split()))
-            job = {
-                'id': job_id,
-                'subtime': job_info[1],
-                'res': job_info[7],
-                'profile': None
+    # Custom workload (JSON)
+    if custom_workload_path:
+        with open(custom_workload_path, 'r') as in_f:
+            workload = json.load(in_f)
+        # Adjust operations for every profile
+        for profile in workload['profiles'].values():
+            profile['req_ops'] = reference_speed * profile['req_time'] * 1e9
+            profile['cpu'] = profile['req_ops']
+    # Usual workload (SWF)
+    else:
+        with open(workload_file_path, 'r') as in_f:
+            workload = {
+                'nb_res': nb_cores,
+                'jobs': [],
+                'profiles': {}
             }
-            profile = {
-                'type': 'parallel_homogeneous',
-                'com': 0,
-                'cpu': None,
-                'req_time': job_info[8],
-                'req_ops': None,
-                'mem': job_info[9],
-                'mem_bw': None
-            }
-            # Skip if submission time, requested cores, requested time per core and both
-            # memory parameters are not specified. In SWF, this is indicated by - 1.
-            # job_info[6] = used_mem
-            if any(map(lambda parameter: parameter < 0,
-                       (job['subtime'], job['res'], profile['req_time']))):
-                continue
-            if profile['mem'] < 0:
-                if job_info[6] < 0:
+            # Read each Job from the SWF file and parse the fields
+            min_submit_time = None
+            job_id = 0
+            for line in in_f:
+                # End if total number of jobs has been reached
+                if job_id == nb_jobs:
+                    break
+                # Skip comments
+                if line.startswith(';'):
                     continue
-                else:
-                    profile['mem'] = job_info[6]
-            # Need to shift the initial submission time by the minimum since the trace does not
-            # start at 0
-            if not min_submit_time:
-                min_submit_time = job['subtime']
-            job['subtime'] -= min_submit_time
-            # Calculate FLOPs per core. The original trace provides time per core, here it
-            # is normalized to FLOPs with respect to the reference speed calculated previously.
-            profile['req_ops'] = int(reference_speed * profile['req_time'])
-            # User estimates in Job requested time have been shown to be generally overestimated.
-            # The distribution here used is taken as an approximation to that shown in
-            # [Tsafrir et al. 2007]
-            profile['cpu'] = int(reference_speed * nprnd.choice(
-                numpy.arange(0.05, 1.3, 0.05),
-                p=numpy.array([0.15, 0.09, 0.07] + 5 * [0.04] + 5 *\
-                            [0.03] + 10 * [0.02] + [0.06, 0.08])
-            ) * profile['req_time'])
-            # Original trace provides memory in KB, convert it to MB for framework compatibility
-            profile['mem'] = int(profile['mem'] / 1000)
-            # Calculate the sustained memory bandwidth requirement per core. No info on original
-            # trace, this is synthetically produced from a random uniform distribution with values
-            # (4, 8, 12, 16, 20, 24).
-            profile['mem_bw'] = int(nprnd.choice(numpy.arange(4, 25, 4)))
-            # Profile name based on parameters. This may be shared between multiple Jobs if they
-            # share their requirements.
-            job['profile'] = f'{profile["req_time"]}_{profile["mem"]}_{profile["mem_bw"]}'
-            workload['profiles'].setdefault(job['profile'], profile)
-            workload['jobs'].append(job)
-            job_id += 1
+                job_info = tuple(map(lambda par: int(float(par)), line.split()))
+                job = {
+                    'id': job_id,
+                    'subtime': job_info[1],
+                    'res': job_info[7],
+                    'profile': None
+                }
+                profile = {
+                    'type': 'parallel_homogeneous',
+                    'com': 0,
+                    'cpu': None,
+                    'req_time': job_info[8],
+                    'req_ops': None,
+                    'mem': job_info[9],
+                    'mem_bw': None
+                }
+                # Skip if submission time, requested cores, requested time per core and both
+                # memory parameters are not specified. In SWF, this is indicated by - 1.
+                # job_info[6] = used_mem
+                if any(map(lambda parameter: parameter < 0,
+                        (job['subtime'], job['res'], profile['req_time']))):
+                    continue
+                if profile['mem'] < 0:
+                    if job_info[6] < 0:
+                        continue
+                    else:
+                        profile['mem'] = job_info[6]
+                # Need to shift the initial submission time by the minimum since the trace does not
+                # start at 0
+                if not min_submit_time:
+                    min_submit_time = job['subtime']
+                job['subtime'] -= min_submit_time
+                # Calculate FLOPs per core. The original trace provides time per core, here it
+                # is normalized to FLOPs with respect to the reference speed calculated previously.
+                profile['req_ops'] = int(reference_speed * profile['req_time'] * 1e9)
+                # User estimates in Job requested time have been shown to be generally overestimated.
+                # The distribution here used is taken as an approximation to that shown in
+                # [Tsafrir et al. 2007]
+                profile['cpu'] = int(reference_speed * nprnd.choice(
+                    numpy.arange(0.05, 1.3, 0.05),
+                    p=numpy.array([0.15, 0.09, 0.07] + 5 * [0.04] + 5 *\
+                                [0.03] + 10 * [0.02] + [0.06, 0.08])
+                ) * profile['req_time'] * 1e9)
+                # Original trace provides memory in KB, convert it to MB for framework compatibility
+                profile['mem'] = int(profile['mem'] / 1000)
+                # Calculate the sustained memory bandwidth requirement per core. No info on original
+                # trace, this is synthetically produced from a random uniform distribution with values
+                # (4, 8, 12, 16, 20, 24).
+                profile['mem_bw'] = int(nprnd.choice(numpy.arange(4, 25, 4)))
+                # Profile name based on parameters. This may be shared between multiple Jobs if they
+                # share their requirements.
+                job['profile'] = f'{profile["req_time"]}_{profile["mem"]}_{profile["mem_bw"]}'
+                workload['profiles'].setdefault(job['profile'], profile)
+                workload['jobs'].append(job)
+                job_id += 1
     # Write the data structure into the JSON output
     with open('workload.json', 'w') as out_f:
         json.dump(workload, out_f)
@@ -140,7 +152,7 @@ Args:
         'types': None,
         'gen_platform_xml': gen_platform_xml,
         'gen_res_hierarchy': gen_res_hierarchy,
-        'counters': {'cluster': 0, 'node': 0, 'core': 0},
+        'counters': {'cluster': 0, 'node': 0, 'processor': 0, 'core': 0},
         # Core pool for filtering and selecting Cores is initially empty
         'core_pool': [],
         'cluster_xml': None,
@@ -282,6 +294,7 @@ def _generate_processors(shared_state: dict, node_desc: dict, node_el: dict) -> 
                                    power_per_core)
             _generate_cores(shared_state, gflops_per_core_xml, power_per_core_xml, proc_desc,
                             proc_el)
+            shared_state['counters']['processor'] += 1
 
 def _proc_xml(gflops_per_core: float, power_per_core: float) -> tuple:
     # For each processor several P-states are defined based on the utilization
@@ -303,10 +316,11 @@ def _proc_el(shared_state: dict, proc_desc: dict, node_el: dict, gflops_per_core
     max_mem_bw = shared_state['types']['processor'][proc_desc['type']]['mem_bw']
     proc_el = {
         'node': node_el,
+        'id': shared_state['counters']['processor'],
         # Memory bandwidth is tracked at Processor-level
         'max_mem_bw': max_mem_bw,
         'current_mem_bw': max_mem_bw,
-        'flops_per_core': gflops_per_core * 1e9,
+        'gflops_per_core': gflops_per_core,
         'power_per_core': power_per_core,
         'local_cores': []
     }
@@ -399,5 +413,5 @@ def _write_resource_hierarchy(shared_state: dict, root_el: dict) -> None:
     with open('res_hierarchy.pkl', 'wb') as out_f:
         # Add the reference speed to the resource hierarchy
         root_el['reference_speed'] = numpy.mean(numpy.array(
-            [core.processor['flops_per_core'] for core in shared_state['core_pool']]))
+            [core.processor['gflops_per_core'] for core in shared_state['core_pool']]))
         pickle.dump((root_el, shared_state['core_pool']), out_f)
