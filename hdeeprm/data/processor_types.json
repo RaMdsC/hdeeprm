@@ -53,12 +53,23 @@
     "power":100,
     "dpflops_per_cycle":4
   },
-  "Test0":{
-    "uarch":"test0",
-    "id":"test0",
+  "Test0_0":{
+    "uarch":"test0_0",
+    "id":"test0_0",
     "type":"CPU",
     "cores":2,
     "clock_rate":1,
+    "mem_bw":32,
+    "llc_size":8,
+    "power":80,
+    "dpflops_per_cycle":4
+  },
+  "Test0_1":{
+    "uarch":"test0_1",
+    "id":"test0_1",
+    "type":"CPU",
+    "cores":2,
+    "clock_rate":1.1,
     "mem_bw":32,
     "llc_size":8,
     "power":100,

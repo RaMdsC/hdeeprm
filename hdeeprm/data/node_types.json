@@ -46,7 +46,8 @@
   "Test0":{
     "id":"test0",
     "processors":[
-      {"type":"Test0", "number":2}
+      {"type":"Test0_0", "number":1},
+      {"type":"Test0_1", "number":1}
     ],
     "memory":{"type":"DDR3-1600", "capacity":32}
   },
