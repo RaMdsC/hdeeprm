@@ -1,18 +1,19 @@
 """
-The HDeepRM Workload Manager is able to evaluate Deep Reinforcement Learning policies in the
+The HDeepRM workload manager is able to evaluate deep reinforcement learning policies in the
 framework.
 """
 
-import logging
 import importlib.util as iutil
 import inspect
+import json
+import logging
 import os.path as path
 import numpy as np
 import torch
 from batsim.batsim import Job
 from hdeeprm.agent import Agent, ClassicAgent
 from hdeeprm.entrypoints.BaseWorkloadManager import BaseWorkloadManager
-from hdeeprm.environment import HDeepRMEnv, HDeepRMEnvSmall, HDeepRMEnvMinimal
+from hdeeprm.environment import Environment
 
 class HDeepRMWorkloadManager(BaseWorkloadManager):
     """Entrypoint for Deep Reinforcement Learning experimentation.
@@ -23,7 +24,7 @@ Batsim events and calling the Agent when it is necessary. It extends the
 :class:`~hdeeprm.entrypoints.BaseWorkloadManager.BaseWorkloadManager` for basic event handling.
 
 Attributes:
-    env (:class:`~hdeeprm.environment.HDeepRMEnv`):
+    env (:class:`~hdeeprm.environment.Environment`):
         The Workload Management Environment. The Agent observes and interacts with it.
     agent (:class:`~hdeeprm.agent.Agent`):
         The Agent in charge of making decisions by observing and altering the Environment.
@@ -41,17 +42,20 @@ Attributes:
           | action_taken (bool):
             Becomes ``True`` when an action has been taken by the Agent. This triggers the reward
               procedure.
+          | void_taken (bool):
+            Becomes ``True`` when a void action has been selected.
     """
 
     def __init__(self, options: dict) -> None:
         super().__init__(options)
-        self.env = HDeepRMEnvMinimal(self, options['env'])
+        self.env = Environment(self, options['env'])
         self.agent, self.optimizer = self.create_agent(options['agent'], options['seed'])
         self.step = 0
         self.flow_flags = {
             'jobs_submitted': False,
             'jobs_completed': False,
-            'action_taken': False
+            'action_taken': False,
+            'void_taken': False
         }
 
     def create_agent(self, agent_options: dict, seed: int) -> tuple:
@@ -70,7 +74,7 @@ Returns:
 
         optimizer = None
         if agent_options['type'] == 'CLASSIC':
-            agent = ClassicAgent(agent_options['policy_pair'])
+            agent = ClassicAgent()
         elif agent_options['type'] == 'LEARNING':
             # Obtain the agent class
             agent_module_name = path.splitext(path.basename(agent_options['file']))[0]
@@ -127,11 +131,22 @@ logged for observing performance.
         logging.info('Average scheduled jobs in one step: %s', self.scheduled_step["total"]\
                                                                / self.scheduled_step["num_steps"])
         # Save metrics
-        with open('rewards.log', 'a+') as rewards_f,\
-             open('makespans.log', 'a+') as makespans_f:
-            rewards_f.write(f'{self.agent.rewards}\n')
-            rewards_f.write(f'Sum: {np.sum(self.agent.rewards)}\n')
-            makespans_f.write(f'{self.bs.time()}\n')
+        with open('rewards.log', 'a+') as out_f:
+            out_f.write(f'{np.sum(self.agent.rewards)}\n')
+        with open('makespans.log', 'a+') as out_f:
+            out_f.write(f'{self.bs.time()}\n')
+        if hasattr(self.agent, 'probs'):
+            if path.isfile('probs.json'):
+                with open('probs.json', 'r') as in_f:
+                    probs = json.load(in_f)['probs']
+                for action, prob in zip(range(self.env.action_size), self.agent.probs):
+                    probs[action].append(prob)
+            else:
+                probs = []
+                for prob in self.agent.probs:
+                    probs.append([prob])
+            with open('probs.json', 'w+') as out_f:
+                json.dump({'probs': probs}, out_f)
 
     def onJobSubmission(self, job: Job) -> None:
         """Set the "jobs_submitted" flag to ``True``.
@@ -168,8 +183,9 @@ When there are no more events in the current time step, the following flow occur
                 # The Agent is rewarded
                 self.agent.rewarded(self.env)
                 self.flow_flags['action_taken'] = False
-            if (self.flow_flags['jobs_submitted'] or self.flow_flags['jobs_completed'])\
-               and self.job_scheduler.nb_pending_jobs:
+            if (self.flow_flags['jobs_submitted'] or self.flow_flags['jobs_completed'] or\
+                (self.bs.no_more_static_jobs and self.flow_flags['void_taken'])) and\
+                  self.job_scheduler.nb_pending_jobs:
                 # The Agent observes the Environment
                 observation = self.agent.observe(self.env)
                 logging.info('Step %s', self.step)
@@ -177,6 +193,11 @@ When there are no more events in the current time step, the following flow occur
                 # The Agent decides which action to take
                 action = self.agent.decide(observation)
                 logging.info('Action %s', action)
+                if action == self.env.action_size - 1:
+                    self.flow_flags['void_taken'] = True
+                    print('hey')
+                else:
+                    self.flow_flags['void_taken'] = False
                 # The Agent alters the Environment
                 self.agent.alter(action, self.env)
                 self.step += 1
@@ -184,3 +205,8 @@ When there are no more events in the current time step, the following flow occur
                 self.flow_flags['jobs_submitted'] = self.flow_flags['jobs_completed'] = False
             # Modify resource states
             self.change_resource_states()
+            # Treat case when a void action has been taken but there are still
+            # pending jobs in spite of no more arrivals. This avoids deadlock.
+            if self.bs.no_more_static_jobs and self.job_scheduler.pending_jobs\
+               and self.flow_flags['void_taken']:
+                self.onNoMoreEvents()
