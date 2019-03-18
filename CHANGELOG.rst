@@ -1,7 +1,16 @@
 Changelog
 =========
 
-`0.3.0b0 <https://github.com/RaMdsC/hdeeprm/tree/0.2.0b1>`__ (11-03-2019)
+`0.3.1b0 <https://github.com/RaMdsC/hdeeprm/tree/0.3.1b0>`__ (18-03-2019)
+-------------------------------------------------------------------------
+
+- Record agent initial probabilities into JSON file. Used for visualizations.
+- New *losses*, *rewards* and *action_preferences* visualizations.
+- Added learning experiment.
+- Refactored environment, now main class is *Environment*.
+- User-defined action subsets and observation types.
+
+`0.3.0b0 <https://github.com/RaMdsC/hdeeprm/tree/0.3.0b0>`__ (11-03-2019)
 -------------------------------------------------------------------------
 
 - Added thesis experiments.
@@ -10,7 +19,7 @@ Changelog
 - New visualizations for exploring over-utilizations.
 - Fixed agent bugs.
 
-`0.2.1b0 <https://github.com/RaMdsC/hdeeprm/tree/0.2.0b1>`__ (11-03-2019)
+`0.2.1b0 <https://github.com/RaMdsC/hdeeprm/tree/0.2.1b1>`__ (11-03-2019)
 -------------------------------------------------------------------------
 
 - New *hdeeprm-metrics* utility for plotting a grid comparing metrics
