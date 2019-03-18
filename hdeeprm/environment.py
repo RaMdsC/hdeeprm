@@ -2,12 +2,14 @@
 The environment is the representation of the agent's observable context.
 """
 
+from collections import OrderedDict
+from functools import partial
 import logging
 import gym
 import gym.spaces
 import numpy as np
 
-class HDeepRMEnv(gym.Env):
+class Environment(gym.Env):
     """Environment for workload management in HDeepRM.
 
 It is composed of an action space and an observation space. For every decision step, the agent
@@ -96,63 +98,75 @@ Attributes:
 
     def __init__(self, workload_manager, env_options: dict) -> None:
         self.workload_manager = workload_manager
-        self.action_space = gym.spaces.Discrete(37)
-        self.action_keys = [
-            (None, None),
-            (None, lambda res: - res.processor['gflops_per_core']),
-            (None, lambda res: - len([core for core in res.processor['local_cores']\
-                                     if core.state['served_job']])),
-            (None, lambda res: - res.processor['node']['current_mem']),
-            (None, lambda res: - res.processor['current_mem_bw']),
-            (None, lambda res: res.processor['power_per_core']),
-            (lambda job: job.submit_time, None),
-            (lambda job: job.submit_time, lambda res: - res.processor['gflops_per_core']),
-            (lambda job: job.submit_time,
-             lambda res: - len([core for core in res.processor['local_cores']\
-                                if core.state['served_job']])),
-            (lambda job: job.submit_time, lambda res: - res.processor['node']['current_mem']),
-            (lambda job: job.submit_time, lambda res: - res.processor['current_mem_bw']),
-            (lambda job: job.submit_time, lambda res: res.processor['power_per_core']),
-            (lambda job: job.req_time, None),
-            (lambda job: job.req_time, lambda res: - res.processor['gflops_per_core']),
-            (lambda job: job.req_time,
-             lambda res: - len([core for core in res.processor['local_cores']\
-                                if core.state['served_job']])),
-            (lambda job: job.req_time, lambda res: - res.processor['node']['current_mem']),
-            (lambda job: job.req_time, lambda res: - res.processor['current_mem_bw']),
-            (lambda job: job.req_time, lambda res: res.processor['power_per_core']),
-            (lambda job: job.requested_resources, None),
-            (lambda job: job.requested_resources, lambda res: - res.processor['gflops_per_core']),
-            (lambda job: job.requested_resources,
-             lambda res: - len([core for core in res.processor['local_cores']\
-                                if core.state['served_job']])),
-            (lambda job: job.requested_resources,
-             lambda res: - res.processor['node']['current_mem']),
-            (lambda job: job.requested_resources, lambda res: - res.processor['current_mem_bw']),
-            (lambda job: job.requested_resources, lambda res: res.processor['power_per_core']),
-            (lambda job: job.mem, None),
-            (lambda job: job.mem, lambda res: - res.processor['gflops_per_core']),
-            (lambda job: job.mem,
-             lambda res: - len([core for core in res.processor['local_cores']\
-                                if core.state['served_job']])),
-            (lambda job: job.mem, lambda res: - res.processor['node']['current_mem']),
-            (lambda job: job.mem, lambda res: - res.processor['current_mem_bw']),
-            (lambda job: job.mem, lambda res: res.processor['power_per_core']),
-            (lambda job: job.mem_bw, None),
-            (lambda job: job.mem_bw, lambda res: - res.processor['gflops_per_core']),
-            (lambda job: job.mem_bw,
-             lambda res: - len([core for core in res.processor['local_cores']\
-                                if core.state['served_job']])),
-            (lambda job: job.mem_bw, lambda res: - res.processor['node']['current_mem']),
-            (lambda job: job.mem_bw, lambda res: - res.processor['current_mem_bw']),
-            (lambda job: job.mem_bw, lambda res: res.processor['power_per_core'])
-        ]
-        observation_size = self.workload_manager.resource_manager.platform['total_nodes'] +\
-                           self.workload_manager.resource_manager.platform['total_processors'] +\
-                           self.workload_manager.resource_manager.platform['total_cores'] * 3 + 21
-        self.observation_space = gym.spaces.Box(low=np.zeros(observation_size, dtype=np.float32),
-                                                high=np.ones(observation_size, dtype=np.float32),
-                                                dtype=np.float32)
+        # Selection policies
+        job_selections = OrderedDict({
+            'random': None,
+            'first': lambda job: job.submit_time,
+            'shortest': lambda job: job.req_time,
+            'smallest': lambda job: job.requested_resources,
+            'low_mem': lambda job: job.mem,
+            'low_mem_bw': lambda job: job.mem_bw
+        })
+        core_selections = OrderedDict({
+            'random': None,
+            'high_gflops': lambda core: - core.processor['gflops_per_core'],
+            'high_cores': lambda core: - len([c for c in core.processor['local_cores']\
+                                              if c.state['served_job']]),
+            'high_mem': lambda core: - core.processor['node']['current_mem'],
+            'high_mem_bw': lambda core: - core.processor['current_mem_bw'],
+            'low_power': lambda core: core.processor['power_per_core']
+        })
+        # Parse the actions selected by the user
+        self.actions = []
+        if 'actions' in env_options:
+            for sel in env_options['actions']['selection']:
+                for job_sel, core_sels in sel.items():
+                    for core_sel in core_sels:
+                        self.actions.append(
+                            (job_selections[job_sel], core_selections[core_sel])
+                        )
+            self.with_void = env_options['actions']['void']
+        else:
+            for job_sel in job_selections.values():
+                for core_sel in core_selections.values():
+                    self.actions.append((job_sel, core_sel))
+            self.with_void = True
+        # Add the void action if specified
+        if self.with_void:
+            nb_actions = len(self.actions) + 1
+        else:
+            nb_actions = len(self.actions)
+        self.action_space = gym.spaces.Discrete(nb_actions)
+
+        # Observation types
+        observation_types = {
+            'normal': {
+                'size': self.workload_manager.resource_manager.platform['total_nodes'] +\
+                        self.workload_manager.resource_manager.platform['total_processors'] +\
+                        self.workload_manager.resource_manager.platform['total_cores'] * 3 + 21,
+                'observation': partial(self._base_observation, otype='normal')
+            },
+            'small': {
+                'size': self.workload_manager.resource_manager.platform['total_nodes'] +\
+                        self.workload_manager.resource_manager.platform['total_processors'] + 21,
+                'observation': partial(self._base_observation, otype='small')
+            },
+            'minimal': {
+                'size': 21,
+                'observation': partial(self._base_observation, otype='minimal')
+            }
+        }
+        # Set the observation type
+        if 'observation' in env_options:
+            observation_type = env_options['observation']
+        else:
+            observation_type = 'normal'
+        self.observation = observation_types[observation_type]['observation']
+        self.observation_space = gym.spaces.Box(
+            low=np.zeros(observation_types[observation_type]['size'], dtype=np.float32),
+            high=np.ones(observation_types[observation_type]['size'], dtype=np.float32),
+            dtype=np.float32
+        )
         # Sets the correspondent reward function based on the objective
         objective_to_reward = {
             'avg_job_slowdown': self.avg_job_slowdown_reward,
@@ -190,11 +204,14 @@ Returns:
 
         return self.observation_space.shape[0]
 
-    def observation(self) -> np.ndarray:
+    def _base_observation(self, otype: str) -> np.ndarray:
         """Constructs and provides the agent with an observation.
 
-The observation composition is explained in detail in :class:`~hdeeprm.environment.HDeepRMEnv`.
+The observation composition is explained in detail in :class:`~hdeeprm.environment.Environment`.
 
+Args:
+    otype (str):
+        Type of the observation.
 Returns:
     The observation as a NumPy array.
         """
@@ -216,29 +233,32 @@ Returns:
             return max(0.0, min(1.0, variation_ratio))
 
         observation = []
-        for cluster in self.workload_manager.resource_manager.platform['clusters']:
-            for node in cluster['local_nodes']:
-                # Node: current fraction of memory available
-                observation.append(node['current_mem'] / node['max_mem'])
-                for processor in node['local_processors']:
-                    # Processor: current fraction of memory BW available
-                    # Memory bandwidth is not bounded, since several jobs might be overutilizing it,
-                    # clip it to a minimum
-                    observation.append(max(0.0,
-                                           processor['current_mem_bw']) / processor['max_mem_bw'])
-                    for core in processor['local_cores']:
-                        if not core.state['served_job']:
-                            # If the core is not active, remaining percentage is 0.0
-                            remaining_per = 0.0
-                        else:
-                            # Percentage remaining of the current served job
-                            core.update_completion(self.workload_manager.bs.time())
-                            remaining_per = core.get_remaining_per()
-                        observation.extend(
-                            [core.state['current_gflops'] / processor['gflops_per_core'],
-                             core.state['current_power'] / processor['power_per_core'],
-                             remaining_per]
+        if otype != 'minimal':
+            for cluster in self.workload_manager.resource_manager.platform['clusters']:
+                for node in cluster['local_nodes']:
+                    # Node: current fraction of memory available
+                    observation.append(node['current_mem'] / node['max_mem'])
+                    for processor in node['local_processors']:
+                        # Processor: current fraction of memory BW available
+                        # Memory bandwidth is not bounded, since several jobs might be
+                        # overutilizing it, clip it to a minimum
+                        observation.append(
+                            max(0.0, processor['current_mem_bw']) / processor['max_mem_bw']
                         )
+                        if otype != 'small':
+                            for core in processor['local_cores']:
+                                if not core.state['served_job']:
+                                    # If the core is not active, remaining percentage is 0.0
+                                    remaining_per = 0.0
+                                else:
+                                    # Percentage remaining of the current served job
+                                    core.update_completion(self.workload_manager.bs.time())
+                                    remaining_per = core.get_remaining_per()
+                                observation.extend(
+                                    [core.state['current_gflops'] / processor['gflops_per_core'],
+                                    core.state['current_power'] / processor['power_per_core'],
+                                    remaining_per]
+                                )
         req_time = np.array(
             [job.req_time for job in self.workload_manager.job_scheduler.pending_jobs])
         req_core = np.array(
@@ -294,11 +314,11 @@ Args:
 
         assert self.action_space.contains(action), f'{action} ({type(action)}) invalid'
         # Check for void action, if so do not do anything
-        if action == self.action_size - 1:
+        if self.with_void and action == self.action_size - 1:
             logging.warning('Void action selected!')
         else:
             # Set actions as given by the key
-            keys = self.action_keys[action]
+            keys = self.actions[action]
             self.workload_manager.job_scheduler.sorting_key = keys[0]
             self.workload_manager.resource_manager.sorting_key = keys[1]
             # Schedule jobs
@@ -391,154 +411,3 @@ TODO
 
     def reset(self):
         """Not used."""
-
-class HDeepRMEnvSmall(HDeepRMEnv):
-
-    def __init__(self, workload_manager, env_options: dict) -> None:
-        super(HDeepRMEnvSmall, self).__init__(workload_manager, env_options)
-        self.workload_manager = workload_manager
-        self.action_space = gym.spaces.Discrete(11)
-        self.action_keys = [
-            (None, lambda res: - res.processor['gflops_per_core']),
-            (None, lambda res: - res.processor['current_mem_bw']),
-            (lambda job: job.submit_time, lambda res: - res.processor['gflops_per_core']),
-            (lambda job: job.submit_time, lambda res: - res.processor['current_mem_bw']),
-            (lambda job: job.req_time, lambda res: - res.processor['gflops_per_core']),
-            (lambda job: job.req_time, lambda res: - res.processor['current_mem_bw']),
-            (lambda job: job.mem, lambda res: - res.processor['gflops_per_core']),
-            (lambda job: job.mem, lambda res: - res.processor['current_mem_bw']),
-            (lambda job: job.mem_bw, lambda res: - res.processor['gflops_per_core']),
-            (lambda job: job.mem_bw, lambda res: - res.processor['current_mem_bw'])
-        ]
-        observation_size = self.workload_manager.resource_manager.platform['total_nodes'] +\
-                           self.workload_manager.resource_manager.platform['total_processors'] + 21
-        self.observation_space = gym.spaces.Box(low=np.zeros(observation_size, dtype=np.float32),
-                                                high=np.ones(observation_size, dtype=np.float32),
-                                                dtype=np.float32)
-
-    def observation(self) -> np.ndarray:
-
-        def to_range(variation_ratio: float) -> float:
-            variation_ratio = (variation_ratio + self.queue_sensitivity)\
-                              / (2 * self.queue_sensitivity)
-            # Clip it
-            return max(0.0, min(1.0, variation_ratio))
-
-        observation = []
-        for cluster in self.workload_manager.resource_manager.platform['clusters']:
-            for node in cluster['local_nodes']:
-                # Node: current fraction of memory available
-                observation.append(node['current_mem'] / node['max_mem'])
-                for processor in node['local_processors']:
-                    # Processor: current fraction of memory BW available
-                    # Memory bandwidth is not bounded, since several jobs might be overutilizing it,
-                    # clip it to a minimum
-                    observation.append(max(0.0,
-                                           processor['current_mem_bw']) / processor['max_mem_bw'])
-        req_time = np.array(
-            [job.req_time for job in self.workload_manager.job_scheduler.pending_jobs])
-        req_core = np.array(
-            [job.requested_resources for job in self.workload_manager.job_scheduler.pending_jobs])
-        req_mem = np.array(
-            [job.mem for job in self.workload_manager.job_scheduler.pending_jobs])
-        req_mem_bw = np.array(
-            [job.mem_bw for job in self.workload_manager.job_scheduler.pending_jobs])
-        # Calculate percentiles for each requested resource
-        # Each percentile is tranformed into a fraction relative to the maximum value
-        job_limits = self.workload_manager.resource_manager.platform['job_limits']
-        reqes = (req_time, req_core, req_mem, req_mem_bw)
-        reqns = ('time', 'core', 'mem', 'mem_bw')
-        maxes = (job_limits['max_time'], job_limits['max_core'],
-                 job_limits['max_mem'], job_limits['max_mem_bw'])
-        for reqe, reqn, maxe in zip(reqes, reqns, maxes):
-            pmin = np.min(reqe) / maxe
-            p25 = np.percentile(reqe, 25) / maxe
-            pmed = np.median(reqe) / maxe
-            p75 = np.percentile(reqe, 75) / maxe
-            pmax = np.max(reqe) / maxe
-            logging.info('Relative percentiles for %s: %s %s %s %s %s',
-                         reqn, pmin, p25, pmed, p75, pmax)
-            observation.extend([pmin, p25, pmed, p75, pmax])
-        # Fraction of queue variation since last observation
-        if not self.last_job_queue_length and self.workload_manager.job_scheduler.nb_pending_jobs:
-            # Past queue was empty and current queue has jobs
-            variation_ratio = 1.0
-        else:
-            # 0.0 when current queue is 1xQueue Sensitivity less than past queue
-            # 1.0 when current queue is 1xQueue Sensitivity more than past queue
-            # 0.5 indicates no variability
-            variation = self.workload_manager.job_scheduler.nb_pending_jobs\
-                        - self.last_job_queue_length
-            variation_ratio = to_range(
-                variation / min(self.workload_manager.job_scheduler.nb_pending_jobs,
-                                self.last_job_queue_length)
-            )
-        observation.append(variation_ratio)
-        self.last_job_queue_length = self.workload_manager.job_scheduler.nb_pending_jobs
-        return np.array(observation, dtype=np.float32)
-
-class HDeepRMEnvMinimal(HDeepRMEnv):
-
-    def __init__(self, workload_manager, env_options: dict) -> None:
-        super(HDeepRMEnvMinimal, self).__init__(workload_manager, env_options)
-        self.action_space = gym.spaces.Discrete(3)
-        self.action_keys = [
-            (lambda job: job.req_time, lambda res: - res.processor['gflops_per_core']),
-            (lambda job: job.req_time, lambda res: - res.processor['current_mem_bw'])
-        ]
-        observation_size = 21
-        self.observation_space = gym.spaces.Box(low=np.zeros(observation_size, dtype=np.float32),
-                                                high=np.ones(observation_size, dtype=np.float32),
-                                                dtype=np.float32)
-
-    def observation(self) -> np.ndarray:
-
-        def to_range(variation_ratio: float) -> float:
-
-            variation_ratio = (variation_ratio + self.queue_sensitivity)\
-                              / (2 * self.queue_sensitivity)
-            # Clip it
-            return max(0.0, min(1.0, variation_ratio))
-
-        observation = []
-        req_time = np.array(
-            [job.req_time for job in self.workload_manager.job_scheduler.pending_jobs])
-        req_core = np.array(
-            [job.requested_resources for job in self.workload_manager.job_scheduler.pending_jobs])
-        req_mem = np.array(
-            [job.mem for job in self.workload_manager.job_scheduler.pending_jobs])
-        req_mem_bw = np.array(
-            [job.mem_bw for job in self.workload_manager.job_scheduler.pending_jobs])
-        # Calculate percentiles for each requested resource
-        # Each percentile is tranformed into a fraction relative to the maximum value
-        job_limits = self.workload_manager.resource_manager.platform['job_limits']
-        reqes = (req_time, req_core, req_mem, req_mem_bw)
-        reqns = ('time', 'core', 'mem', 'mem_bw')
-        maxes = (job_limits['max_time'], job_limits['max_core'],
-                 job_limits['max_mem'], job_limits['max_mem_bw'])
-        for reqe, reqn, maxe in zip(reqes, reqns, maxes):
-            pmin = np.min(reqe) / maxe
-            p25 = np.percentile(reqe, 25) / maxe
-            pmed = np.median(reqe) / maxe
-            p75 = np.percentile(reqe, 75) / maxe
-            pmax = np.max(reqe) / maxe
-            logging.info('Relative percentiles for %s: %s %s %s %s %s',
-                         reqn, pmin, p25, pmed, p75, pmax)
-            observation.extend([pmin, p25, pmed, p75, pmax])
-        # Fraction of queue variation since last observation
-        if not self.last_job_queue_length and self.workload_manager.job_scheduler.nb_pending_jobs:
-            # Past queue was empty and current queue has jobs
-            variation_ratio = 1.0
-        else:
-            # 0.0 when current queue is 1xQueue Sensitivity less than past queue
-            # 1.0 when current queue is 1xQueue Sensitivity more than past queue
-            # 0.5 indicates no variability
-            variation = self.workload_manager.job_scheduler.nb_pending_jobs\
-                        - self.last_job_queue_length
-            variation_ratio = to_range(
-                variation / min(self.workload_manager.job_scheduler.nb_pending_jobs,
-                                self.last_job_queue_length)
-            )
-        observation.append(variation_ratio)
-        self.last_job_queue_length = self.workload_manager.job_scheduler.nb_pending_jobs
-        return np.array(observation, dtype=np.float32)
