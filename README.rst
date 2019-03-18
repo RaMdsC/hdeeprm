@@ -47,19 +47,19 @@ For installing HDeepRM, just download the package from PyPi:
 
 .. code-block:: bash
 
-  pip install --user hdeeprm
+  pip install --upgrade --user hdeeprm
 
 If ``pip`` is mapped to Python 2.x, try:
 
 .. code-block:: bash
 
-  pip3 install --user hdeeprm
+  pip3 install --upgrade --user hdeeprm
 
 When working with multiple Python versions, use:
 
 .. code-block:: bash
 
-  python3.6 -m pip install --user hdeeprm
+  python3.6 -m pip install --upgrade --user hdeeprm
 
 This should download the ``hdeeprm`` package with all its dependencies,
 which are:
@@ -80,14 +80,14 @@ The simulation side is done by Batsim, which is needed in order to run
 HDeepRM experiments. Follow the `official installation docs
 <https://batsim.readthedocs.io/en/latest/installation.html>`_ for instructions.
 
-Usage
-~~~~~
+Launching experiments
+~~~~~~~~~~~~~~~~~~~~~
 
 In order to experiment with HDeepRM, an integrated launcher is provided:
 
 .. code-block:: bash
 
-  hdeeprm-launch -a <agent.py> -im <saved_model.pt> -om <to_save_model.pt> <options.json>
+  hdeeprm-launch -a <agent.py> -cw <custom_workload.json> -im <saved_model.pt> -om <to_save_model.pt> <options.json>
 
 The ``options.json`` specifies the experiment parameters. The JSON structure
 is as follows:
@@ -95,24 +95,30 @@ is as follows:
 .. code-block:: json
 
   {
-    "seed": "",
-    "nb_resources": "",
-    "nb_jobs": "",
+    "seed": 0,
+    "nb_resources": 0,
+    "nb_jobs": 0,
     "workload_file_path": "",
     "platform_file_path": "",
     "pybatsim": {
       "log_level": "",
       "env": {
         "objective": "",
-        "queue_sensitivity": ""
+        "actions": {
+          "selection": [
+            {"": []}
+          ],
+          "void": false
+        },
+        "observation": ""
+        "queue_sensitivity": 0.0,
       },
       "agent": {
         "type": "",
-        "policy_pair": "",
         "run": "",
-        "hidden": "",
-        "lr": "",
-        "gamma": ""
+        "hidden": 0,
+        "lr": 0.0,
+        "gamma": 0.0
       }
     }
   }
@@ -133,15 +139,13 @@ PyBatsim options:
 PyBatsim - Environment options:
 
 * ``objective`` - Metric to be optimised by the agent. See `Objectives <TODO>`_ for an explanation and recognised values.
+* ``actions`` - Subset of actions for the simulation. If not specified, all 37 actions in HDeepRM are used.
+* ``observation`` - Type of observation to use, one of *normal*, *small* or *minimal*.
 * ``queue_sensitivity`` - Sensitivity of the observation to variations in job queue size. See `Hyperparameters - Queue Sensitivity <TODO>`_.
 
 PyBatsim - Common agent options:
 
 * ``type`` - Type of the scheduling agent, one of *CLASSIC* or *LEARNING*.
-
-PyBatsim - `Classic <https://hdeeprm.readthedocs.io/en/latest/source/packages/hdeeprm.agent.html#hdeeprm.agent.ClassicAgent>`_ agent options:
-
-* ``policy_pair`` - The job and resource selection policies. Policy pairs are further described in `Environment - Action Space <TODO>`_.
 
 PyBatsim - `Learning <https://hdeeprm.readthedocs.io/en/latest/source/packages/hdeeprm.agent.html#hdeeprm.agent.LearningAgent>`_ agent options:
 
@@ -159,19 +163,25 @@ for a classic agent:
 
   {
     "seed": 2009,
-    "nb_resources": 2280,
-    "nb_jobs": 10000,
+    "nb_resources": 175,
+    "nb_jobs": 1000,
     "workload_file_path": "/workspace/workloads/my_workload.swf",
     "platform_file_path": "/workspace/platforms/my_platform.json",
     "pybatsim": {
       "log_level": "DEBUG",
       "env": {
         "objective": "avg_utilization",
+        "actions": {
+          "selection": [
+            {"shortest": ["high_mem_bw"]}
+          ],
+          "void": false
+        },
+        "observation": "normal",
         "queue_sensitivity": 0.05
       },
       "agent": {
-        "type": "CLASSIC",
-        "policy_pair": "shortest-high_flops"
+        "type": "CLASSIC"
       }
     }
   }
@@ -184,14 +194,21 @@ in this case for a learning agent:
 
   {
     "seed": 1995,
-    "nb_resources": 2280,
-    "nb_jobs": 10000,
+    "nb_resources": 175,
+    "nb_jobs": 1000,
     "workload_file_path": "/workspace/workloads/my_workload.swf",
     "platform_file_path": "/workspace/platforms/my_platform.json",
     "pybatsim": {
       "log_level": "WARNING",
       "env": {
         "objective": "makespan",
+        "actions": {
+          "selection": [
+            {"first": ["high_gflops", "high_mem_bw"]},
+            {"smallest": [""]}
+          ],
+          "void": false
+        },
         "queue_sensitivity": 0.01
       },
       "agent": {
@@ -204,17 +221,19 @@ in this case for a learning agent:
     }
   }
 
-Extra command line arguments are available for learning agent simulations:
+Optional command line arguments are available:
 
-- The ``agent.py`` file contains your developed learning agent for evaluation.
+- ``-a`` - The file containing your developed learning agent for evaluation.
   See `agent examples <TODO>`_ for reference.
 
-- The ``inmodel`` optional argument may be used for providing a path
-  to a previously trained and saved model. HDeepRM will load this model
-  before starting the run.
+- ``-cw`` - If you are thinking about proof-of-concept experiments, you
+  may need to define your own workload. Doing this in SWF is tedious, thus
+  this option allows for passing a custom workload defined in Batsim JSON format.
 
-- The ``outmodel`` optional argument may be specified as a path for
-  saving the model after the run is finished. If not provide, the model
-  won't be saved. This is usually combined with *train* runs.
+- ``-im`` - PyTorch trained models are usually saved in ``.pt`` files. This
+  option allows for loading a previously trained model to bootstrap the agent.
+
+- ``-om`` - If you want to save the model after the simulation is finished, specify
+  the output file in this option. This is usually combined with *train* runs.
 
 .. include-overview-end
