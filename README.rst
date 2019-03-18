@@ -110,7 +110,7 @@ is as follows:
           ],
           "void": false
         },
-        "observation": ""
+        "observation": "",
         "queue_sensitivity": 0.0,
       },
       "agent": {
