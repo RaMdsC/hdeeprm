@@ -33,7 +33,7 @@ Attributes:
 Through observing, the agent gains information about the environment.
 
 Args:
-    environment (:class:`~hdeeprm.environment.HDeepRMEnv`):
+    environment (:class:`~hdeeprm.environment.Environment`):
         The environment to be observed.
 
 Returns:
@@ -45,7 +45,7 @@ Returns:
     def decide(self, observation: np.ndarray) -> int:
         """Chooses an action given an observation from the environment.
 
-Chosen actions are given by the action space describe in :class:`~hdeeprm.environment.HDeepRMEnv`.
+Chosen actions are given by the action space describe in :class:`~hdeeprm.environment.Environment`.
 
 Args:
     observation (:class:`~numpy.ndarray`):
@@ -66,7 +66,7 @@ state changes are issued into Batsim.
 Args:
     action (int):
         Action ID to be applied.
-    environment (:class:`~hdeeprm.environment.HDeepRMEnv`):
+    environment (:class:`~hdeeprm.environment.Environment`):
         The environment to be altered.
         """
 
@@ -86,63 +86,18 @@ class ClassicAgent(Agent):
 Represents an agent based on a traditional fixed policy. It can be used as a comparison against deep
 reinforcement learning agents being developed. May implement any of the policy pairs in the action
 space.
-
-Attributes:
-    atype (str):
-        Agent type identification.
-    action (int):
-        Fixed Action ID for always selecting the same environment interaction.
     """
 
-    def __init__(self, policy_pair: str) -> None:
+    def __init__(self) -> None:
         super().__init__()
-        policy_pair_to_action = {
-            'random-random': 0,
-            'random-high_gflops': 1,
-            'random-high_cores': 2,
-            'random-high_mem': 3,
-            'random-high_mem_bw': 4,
-            'random-low_power': 5,
-            'first-random': 6,
-            'first-high_gflops': 7,
-            'first-high_cores': 8,
-            'first-high_mem': 9,
-            'first-high_mem_bw': 10,
-            'first-low_power': 11,
-            'shortest-random': 12,
-            'shortest-high_gflops': 13,
-            'shortest-high_cores': 14,
-            'shortest-high_mem': 15,
-            'shortest-high_mem_bw': 16,
-            'shortest-low_energy': 17,
-            'smallest-random': 18,
-            'smallest-high_gflops': 19,
-            'smallest-high_cores': 20,
-            'smallest-high_mem': 21,
-            'smallest-high_mem_bw': 22,
-            'smallest-low_energy': 23,
-            'low_mem-random': 24,
-            'low_mem-high_gflops': 25,
-            'low_mem-high_cores': 26,
-            'low_mem-high_mem': 27,
-            'low_mem-high_mem_bw': 28,
-            'low_mem-low_energy': 29,
-            'low_mem_bw-random': 30,
-            'low_mem_bw-high_gflops': 31,
-            'low_mem_bw-high_cores': 32,
-            'low_mem_bw-high_mem': 33,
-            'low_mem_bw-high_mem_bw': 34,
-            'low_mem_bw-low_energy': 35
-        }
-        self.action = policy_pair_to_action[policy_pair]
 
     def decide(self, observation: np.ndarray) -> int:
-        """Returns the fixed action associated to its policy pair.
+        """Returns the fixed action, which is the only one available.
 
 See :meth:`hdeeprm.agent.Agent.decide`.
         """
 
-        return self.action
+        return 0
 
 class LearningAgent(Agent):
     """Agent which learns based on its actions.
@@ -151,8 +106,6 @@ A generic learning agent processes observations through its inner model. At the 
 given the decision chain is calculated, and utilized for updating the inner model parameters.
 
 Attributes:
-    atype (str):
-        Agent type identification.
     gamma (float):
         Hyperparameter, user provided. Discount factor for rewards, inbetween [0, 1). When close to
         1, rewards from a more distant future will be considered for updating the model and
@@ -225,16 +178,16 @@ different actions given distinct observations from the environment. This means t
 selections may be different depending on the environment state.
 
 Attributes:
+    probs (list):
+        First action preferences of the simulation for evolution insights.
     log_probs (list):
         Log probabilities for loss calculation at the end of the simulation.
-    first_decision (bool):
-        Flag for recording first probability distribution. Utilized for comparing between runs.
     """
 
     def __init__(self, gamma: float) -> None:
         super().__init__(gamma)
+        self.probs = None
         self.log_probs = []
-        self.first_decision = True
 
     def decide(self, observation: np.ndarray) -> int:
         """Process the observation and return the action ID.
@@ -248,16 +201,8 @@ Returns:
         """
 
         probs = self(observation)
-        if self.first_decision:
-            with open('probs.log', 'a+') as out_f:
-                out_f.write('----------------------\n')
-            with open('parameters.log', 'a+') as out_f:
-                out_f.write('PARAMETERS\n')
-                for parameter in self.named_parameters():
-                    out_f.write(f'{parameter}\n')
-            self.first_decision = False
-        with open('probs.log', 'a+') as out_f:
-            out_f.write(f'{probs}\n')
+        if not self.probs:
+            self.probs = probs.detach().numpy().flatten().tolist()
         return self.get_action(probs)
 
     def forward(self, observation: np.ndarray) -> torch.Tensor:
