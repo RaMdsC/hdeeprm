@@ -126,7 +126,7 @@ def visual() -> None:
 
 It utilizes `Evalys <https://gitlab.inria.fr/batsim/evalys>`_ for plotting useful information from
 output files. Supports *queue_size*, *utilization*, *lifecycle*, *gantt*, *gantt_no_label*,
-*core_bubbles*, *mem_bubbles* and *mem_bw_overutilization*.
+*core_bubbles*, *mem_bubbles*, *mem_bw_overutilization*, *losses*, *rewards*, *action_preferences*.
 
 Command line arguments:
     | ``visualization`` - Type of visualization to be printed.
@@ -137,7 +137,7 @@ Command line arguments:
     parser.add_argument('visualization', type=str,
                         choices=('queue_size', 'utilization', 'lifecycle', 'gantt',
                                  'gantt_no_label', 'core_bubbles', 'mem_bubbles',
-                                 'mem_bw_overutilization'),
+                                 'mem_bw_overutilization', 'losses', 'rewards', 'action_preferences'),
                         help='Statistic to visualise')
     parser.add_argument('-s', '--save', type=str, help='Save the plot in the specified file path')
     args = parser.parse_args()
@@ -153,60 +153,86 @@ Command line arguments:
                  f'{agent_options["lr"]} {agent_options["gamma"]}')
     else:
         raise ValueError('Invalid agent type in "options.json"')
-
     
+    # Job visualizations
+    if args.visualization in ('queue_size', 'utilization', 'lifecycle', 'gantt', 'gantt_no_label'):
+        jobset = ej.JobSet.from_csv('./out_jobs.csv', resource_bounds=(0, options['nb_resources']))
+        if args.visualization == 'queue_size':
+            _fixed_plot_series(jobset, name='queue', title=f'Queue size over time for {title}',
+                            legend_label='Queue size')
+            plt.xlabel('Simulation time')
+            plt.ylabel('Pending jobs')
+        elif args.visualization == 'utilization':
+            _fixed_plot_series(jobset, name='utilization', title=f'Utilization over time for {title}',
+                            legend_label='Load')
+            plt.xlabel('Simulation time')
+            plt.ylabel('Active cores')
+        elif args.visualization == 'lifecycle':
+            evl.plot_lifecycle(jobset, title=f'Job lifecycle for {title}')
+        elif args.visualization == 'gantt':
+            evg.plot_gantt(jobset, title=f'Gantt chart for {title}')
+            plt.xlabel('Simulation time')
+        elif args.visualization == 'gantt_no_label':
+            evg.plot_gantt(jobset, title=f'Gantt chart for {title}', labeler=lambda _: '')
+            plt.xlabel('Simulation time')
     # Over-utilization visualizations
-    if args.visualization in ('core_bubbles', 'mem_bubbles', 'mem_bw_overutilization'):
+    elif args.visualization in ('core_bubbles', 'mem_bubbles', 'mem_bw_overutilization'):
         with open('overutilizations.json', 'r') as in_f:
             overutilizations = json.load(in_f)
         with open('out_schedule.csv', 'r') as in_f:
             _, values = [row for row in csv.reader(in_f, delimiter=',')]
             makespan = float(values[2])
-    # Job visualizations
-    else:
-        jobset = ej.JobSet.from_csv('./out_jobs.csv', resource_bounds=(0, options['nb_resources']))
-
-    if args.visualization == 'core_bubbles':
-        fig, ax = plt.subplots()
-        ax.set_title(f'Core bubbles for {title}')
-        ax.set_xlim(0, makespan)
-        ax.set_ylim(0, len(overutilizations['core']))
-        ax.plot(overutilizations['core'], range(len(overutilizations['core'])))
-    elif args.visualization == 'mem_bubbles':
-        fig, ax = plt.subplots()
-        ax.set_title(f'Memory bubbles for {title}')
-        ax.set_xlim(0, makespan)
-        ax.set_ylim(0, len(overutilizations['mem']))
-        ax.plot(overutilizations['mem'], range(len(overutilizations['mem'])))
-    elif args.visualization == 'mem_bw_overutilization':
-        fig, ax = plt.subplots()
-        ax.set_title(f'Mem BW overutilization spans for {title}')
+        _, ax = plt.subplots()
         ax.set_xlim(0, makespan)
         ax.set_xlabel('Simulation time')
-        ax.set_ylim(0, overutilizations['mem_bw']['nb_procs'])
-        ax.set_ylabel('Processors')
         ax.grid(True)
-        for proc_id in overutilizations['mem_bw']['procs']:
-            ax.broken_barh(overutilizations['mem_bw']['procs'][proc_id]['values'],
-                          (int(proc_id), int(proc_id)))
-    elif args.visualization == 'queue_size':
-        _fixed_plot_series(jobset, name='queue', title=f'Queue size over time for {title}',
-                           legend_label='Queue size')
-        plt.xlabel('Simulation time')
-        plt.ylabel('Pending jobs')
-    elif args.visualization == 'utilization':
-        _fixed_plot_series(jobset, name='utilization', title=f'Utilization over time for {title}',
-                           legend_label='Load')
-        plt.xlabel('Simulation time')
-        plt.ylabel('Active cores')
-    elif args.visualization == 'lifecycle':
-        evl.plot_lifecycle(jobset, title=f'Job lifecycle for {title}')
-    elif args.visualization == 'gantt':
-        evg.plot_gantt(jobset, title=f'Gantt chart for {title}')
-        plt.xlabel('Simulation time')
-    elif args.visualization == 'gantt_no_label':
-        evg.plot_gantt(jobset, title=f'Gantt chart for {title}', labeler=lambda _: '')
-        plt.xlabel('Simulation time')
+        if args.visualization == 'core_bubbles':
+            ax.set_title(f'Core bubbles for {title}')
+            ax.set_ylim(0, len(overutilizations['core']))
+            ax.plot(overutilizations['core'], range(len(overutilizations['core'])))
+        elif args.visualization == 'mem_bubbles':
+            ax.set_title(f'Memory bubbles for {title}')
+            ax.set_ylim(0, len(overutilizations['mem']))
+            ax.plot(overutilizations['mem'], range(len(overutilizations['mem'])))
+        elif args.visualization == 'mem_bw_overutilization':
+            ax.set_title(f'Mem BW overutilization spans for {title}')
+            ax.set_ylim(0, overutilizations['mem_bw']['nb_procs'])
+            ax.set_ylabel('Processors')
+            for proc_id in overutilizations['mem_bw']['procs']:
+                ax.broken_barh(overutilizations['mem_bw']['procs'][proc_id]['values'],
+                            (int(proc_id), int(proc_id)))
+    # Learning visualizations
+    elif args.visualization in ('losses', 'rewards', 'action_preferences'):
+        _, ax = plt.subplots()
+        ax.set_xlabel('Episodes')
+        ax.grid(True)
+        if args.visualization == 'losses':
+            with open('losses.log', 'r') as in_f:
+                losses = in_f.readlines()
+            ax.set_title(f'Loss evolution for {title}')
+            ax.set_ylabel('Loss value')
+            ax.plot(tuple(range(len(losses))), tuple(map(float, losses)), 'r')
+        elif args.visualization == 'rewards':
+            with open('rewards.log', 'r') as in_f:
+                rewards = in_f.readlines()
+            ax.set_title(f'Reward evolution for {title}')
+            ax.set_ylabel('Reward')
+            ax.plot(tuple(range(len(rewards))), tuple(map(float, rewards)))
+        elif args.visualization == 'action_preferences':
+            ax.set_title(f'Action preferences for {title}')
+            ax.set_ylabel('Probability')
+            action_names = []
+            for sel in options['pybatsim']['env']['actions']['selection']:
+                for job_sel, core_sels in sel.items():
+                    for core_sel in core_sels:
+                        action_names.append(f'{job_sel}-{core_sel}')
+            with open('probs.json', 'r') as in_f:
+                all_probs = json.load(in_f)['probs']
+                for action_name, probs in zip(action_names, all_probs):
+                    ax.plot(tuple(range(len(probs))), tuple(map(float, probs)), label=action_name)
+            ax.legend()
+
+        ax.set_ylim(bottom=0)
     if args.save:
         plt.savefig(args.save, format='svg', dpi=1200)
     plt.show()
