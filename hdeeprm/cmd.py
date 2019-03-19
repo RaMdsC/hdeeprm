@@ -146,8 +146,12 @@ Command line arguments:
     with open('./options.json', 'r') as in_f:
         options = json.load(in_f)
     agent_options = options['pybatsim']['agent']
+    env_options = options['pybatsim']['env']
     if agent_options['type'] == 'CLASSIC':
-        title = f'{agent_options["type"]} {agent_options["policy_pair"]}'
+        job_sel, core_sels = tuple(
+            env_options["actions"]["selection"][0].items()
+        )[0]
+        title = f'{agent_options["type"]} {job_sel}-{core_sels[0]}'
     elif agent_options['type'] == 'LEARNING':
         title = (f'{agent_options["type"]} {agent_options["run"]} {agent_options["hidden"]} '
                  f'{agent_options["lr"]} {agent_options["gamma"]}')
@@ -222,7 +226,7 @@ Command line arguments:
             ax.set_title(f'Action preferences for {title}')
             ax.set_ylabel('Probability')
             action_names = []
-            for sel in options['pybatsim']['env']['actions']['selection']:
+            for sel in env_options['actions']['selection']:
                 for job_sel, core_sels in sel.items():
                     for core_sel in core_sels:
                         action_names.append(f'{job_sel}-{core_sel}')
