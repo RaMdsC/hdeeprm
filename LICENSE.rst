@@ -1,6 +1,6 @@
 MIT License
 
-Copyright (c) 2019 Adrián Herrera Arcila
+Copyright (c) 2019 Adrián Herrera Arcila, Jose Luis Bosque Orero
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal

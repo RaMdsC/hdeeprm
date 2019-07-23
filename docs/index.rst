@@ -5,6 +5,7 @@
    source/packages/modules
    source/contributing
    source/changelog
+   source/license
    source/credits
 
 .. include:: ../README.rst
