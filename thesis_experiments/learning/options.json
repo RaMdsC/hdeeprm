@@ -1,0 +1,29 @@
+{
+  "seed": 19021285,
+  "nb_resources": 4,
+  "nb_jobs": 2,
+  "workload_file_path": "",
+  "platform_file_path": "../../platform_examples/learning.json",
+  "pybatsim": {
+    "log_level": "WARNING",
+    "env": {
+      "objective": "makespan",
+      "actions": {
+        "selection": [
+          {"shortest": ["high_gflops", "high_mem_bw", "low_power"]},
+          {"first": ["high_gflops", "high_mem_bw"]}
+        ],
+        "void": false
+      },
+      "observation": "minimal",
+      "queue_sensitivity": 0.05
+    },
+    "agent": {
+      "type": "LEARNING",
+      "run": "train",
+      "hidden": 16,
+      "lr": 0.005,
+      "gamma": 0.99
+    }
+  }
+}

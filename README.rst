@@ -209,6 +209,7 @@ in this case for a learning agent:
           ],
           "void": false
         },
+        "observation": "minimal",
         "queue_sensitivity": 0.01
       },
       "agent": {

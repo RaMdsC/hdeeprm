@@ -1,0 +1,18 @@
+{
+  "nb_res": 4,
+  "jobs": [
+    {"id": 0, "subtime": 0, "res": 1, "profile": "Test0"},
+    {"id": 1, "subtime": 0, "res": 1, "profile": "Test0"}
+  ],
+  "profiles": {
+    "Test0": {
+      "type": "parallel_homogeneous",
+      "com": 0,
+      "cpu": 21000000000.0,
+      "req_time": 5,
+      "req_ops": 21000000000.0,
+      "mem": 8000,
+      "mem_bw": 24
+    }
+  }
+}

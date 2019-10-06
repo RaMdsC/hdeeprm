@@ -1,0 +1,21 @@
+{
+  "clusters": [
+    {
+      "id": "learning_cluster",
+      "nodes": [
+        {
+          "type": "Test0",
+          "number": 1
+        }
+      ],
+      "local_links": {
+        "type": "InfiniBand QDR",
+        "latency": "0us"
+      }
+    }
+  ],
+  "global_links": {
+    "type": "InfiniBand QDR",
+    "latency": "0us"
+  }
+}
